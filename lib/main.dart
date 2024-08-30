@@ -1,15 +1,18 @@
-import 'dart:ui';
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:grocerry/ItemScreen.dart';
 import 'package:grocerry/utils.dart';
 
-void main() => runApp(MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: MyHomePage(),
-    ));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: MyHomePage(),
+  ));
+}
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({Key? key}) : super(key: key);
@@ -18,7 +21,6 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PrimaryColor,
-      // bottomNavigationBar: ,
       appBar: AppBar(
         elevation: 0,
         toolbarHeight: 120,
@@ -47,7 +49,6 @@ class MyHomePage extends StatelessWidget {
               children: [
                 Container(
                   padding: EdgeInsets.all(30),
-                  // height: 200,
                   width: double.infinity,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,14 +67,13 @@ class MyHomePage extends StatelessWidget {
                             letterSpacing: 4,
                             color: Colors.white,
                             fontSize: 25,
-                            // fontFamily: 'Comfortaa-',
                             fontWeight: FontWeight.w600),
                       ),
                       SizedBox(
                         height: 10,
                       ),
                       Text(
-                        "in honor of World Helath Day\nwe had likely to give this \namazing offer",
+                        "In honor of World Health Day\nwe would like to give you this\namazing offer",
                         style: TextStyle(
                             letterSpacing: 1,
                             color: Color.fromARGB(255, 177, 176, 176),
@@ -101,10 +101,6 @@ class MyHomePage extends StatelessWidget {
                       color: SecondaryColor,
                       borderRadius: BorderRadius.all(Radius.circular(20))),
                 ),
-                // Positioned(
-                //     child: Image(
-                //   image: AssetImage('assets/images/basket.png'),
-                // ))
               ],
             ),
             SizedBox(
@@ -138,7 +134,6 @@ class MyHomePage extends StatelessWidget {
             ),
             Container(
               width: double.infinity,
-              // height: 100,
               padding: EdgeInsets.all(10),
               decoration: BoxDecoration(
                   color: tColor,
@@ -252,7 +247,7 @@ class MyHomePage extends StatelessWidget {
               color: tColor,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular(20),
+                bottomRight: Radius.circular20),
               ),
             ),
           ),
