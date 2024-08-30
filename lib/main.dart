@@ -2,29 +2,114 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:grocerry/ItemScreen.dart';
-import 'package:grocerry/utils.dart';
+import 'package:provider/provider.dart';
+
+import './screens/home_screen.dart';
+import './screens/login_screen.dart';
+import './screens/register_screen.dart';
+import './screens/password_retrieval_screen.dart';
+import './providers/auth_provider.dart';
+import './providers/product_provider.dart';
+import './providers/cart_provider.dart';
+import './providers/profile_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: MyHomePage(),
-  ));
+  runApp(const MyApp());
 }
 
-class MyHomePage extends StatelessWidget {
-  const MyHomePage({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider(
+            'John Doe', 'john@example.com', 'assets/images/profile_pic.png')),
+      ],
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          scaffoldBackgroundColor: const Color(0xFF1B1B1B),
+          primaryColor: Colors.orangeAccent,
+          colorScheme: ColorScheme.fromSwatch().copyWith(
+            secondary: const Color(0xFFF5F5F5),
+          ),
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Color(0xFF1B1B1B),
+            elevation: 0,
+            toolbarHeight: 120,
+            systemOverlayStyle: SystemUiOverlayStyle(
+              statusBarColor: Colors.transparent,
+            ),
+          ),
+          textTheme: const TextTheme(
+            bodyLarge: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w400,
+              fontFamily: 'Comfortaa',
+            ),
+            bodyMedium: TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.w300,
+              fontFamily: 'Comfortaa',
+            ),
+            titleLarge: TextStyle(
+              color: Colors.orangeAccent,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Comfortaa',
+            ),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: Colors.orangeAccent,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              elevation: 8,
+              shadowColor: Colors.black26,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          ),
+        ),
+        home: Consumer<AuthProvider>(
+          builder: (ctx, authProvider, _) {
+            if (authProvider.user != null) {
+              return const HomeScreen();
+            } else {
+              return const LoginScreen();
+            }
+          },
+        ),
+        routes: {
+          '/login': (ctx) => const LoginScreen(),
+          '/register': (ctx) => const RegisterScreen(),
+          '/password-retrieval': (ctx) =>
+              const PasswordRetrievalScreen(),
+        },
+      ),
+    );
+  }
+}
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PrimaryColor,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        elevation: 0,
-        toolbarHeight: 120,
-        backgroundColor: PrimaryColor,
         leading: Icon(Icons.menu),
         actions: [
           SvgPicture.asset(
@@ -36,10 +121,8 @@ class MyHomePage extends StatelessWidget {
             child: CircleAvatar(
               backgroundImage: AssetImage('assets/images/profileTwo.jpg'),
             ),
-          )
+          ),
         ],
-        systemOverlayStyle:
-            SystemUiOverlayStyle(statusBarColor: Colors.transparent),
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -48,210 +131,89 @@ class MyHomePage extends StatelessWidget {
             Stack(
               children: [
                 Container(
-                  padding: EdgeInsets.all(30),
+                  padding: const EdgeInsets.all(30),
                   width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: Colors.grey,
+                    borderRadius: BorderRadius.all(Radius.circular(20)),
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         "OFFER",
                         style: TextStyle(
-                            letterSpacing: 4, color: MainColor, fontSize: 12),
+                          letterSpacing: 4,
+                          color: Colors.orangeAccent,
+                          fontSize: 12,
+                        ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text(
+                      const SizedBox(height: 10),
+                      const Text(
                         "Flat 35% OFFER",
                         style: TextStyle(
-                            letterSpacing: 4,
-                            color: Colors.white,
-                            fontSize: 25,
-                            fontWeight: FontWeight.w600),
+                          letterSpacing: 4,
+                          color: Colors.white,
+                          fontSize: 25,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
-                      Text(
-                        "In honor of World Health Day\nwe would like to give you this\namazing offer",
+                      const SizedBox(height: 10),
+                      const Text(
+                        "In honor of World Health Day, we would like to give you this amazing offer",
                         style: TextStyle(
-                            letterSpacing: 1,
-                            color: Color.fromARGB(255, 177, 176, 176),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w400),
+                          letterSpacing: 1,
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
-                      SizedBox(
-                        height: 10,
-                      ),
+                      const SizedBox(height: 10),
                       GestureDetector(
                         child: Container(
                           width: 160,
-                          child: Center(child: Text('View Offers')),
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                               vertical: 12, horizontal: 16),
                           decoration: BoxDecoration(
-                              color: MainColor,
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(13))),
+                            color: Colors.orangeAccent,
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(13)),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              'View Offers',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
                         ),
-                      )
+                      ),
                     ],
                   ),
-                  decoration: BoxDecoration(
-                      color: SecondaryColor,
-                      borderRadius: BorderRadius.all(Radius.circular(20))),
                 ),
               ],
             ),
-            SizedBox(
-              height: 50,
-            ),
+            const SizedBox(height: 50),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+              children: const [
                 Text(
                   "Fruits",
                   style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 25,
-                      fontFamily: 'Comfortaa'),
+                    color: Colors.white,
+                    fontSize: 25,
+                    fontFamily: 'Comfortaa',
+                  ),
                 ),
                 Text(
                   'view all',
-                  style: TextStyle(color: MainColor),
-                )
+                  style: TextStyle(color: Colors.orangeAccent),
+                ),
               ],
             ),
-            SizedBox(
-              height: 50,
-            ),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: itemList.map((e) => ItemC(context, e)).toList()),
-            SizedBox(
-              height: 50,
-            ),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                  color: tColor,
-                  borderRadius: BorderRadius.all(Radius.circular(16))),
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                        splashColor: Colors.transparent,
-                        onPressed: () {},
-                        icon: SvgPicture.asset(
-                          'assets/icons/Shop Icon.svg',
-                          color: MainColor,
-                        )),
-                    IconButton(
-                      splashColor: Colors.transparent,
-                      onPressed: () {},
-                      icon: SvgPicture.asset(
-                        'assets/icons/Search Icon.svg',
-                        height: 20,
-                        width: 20,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    IconButton(
-                      splashColor: Colors.transparent,
-                      onPressed: () {},
-                      icon: SvgPicture.asset(
-                        'assets/icons/Mail.svg',
-                        height: 18,
-                        width: 18,
-                        color: Colors.grey,
-                      ),
-                    ),
-                    IconButton(
-                      splashColor: Colors.transparent,
-                      onPressed: () {},
-                      icon: SvgPicture.asset(
-                        'assets/icons/Settings.svg',
-                        height: 20,
-                        width: 20,
-                        color: Colors.grey,
-                      ),
-                    )
-                  ]),
-            )
+            const SizedBox(height: 50),
+            // Add your product display here
           ],
         ),
-      ),
-    );
-  }
-
-  GestureDetector ItemC(BuildContext context, Item e) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => ItemScreen(e: e),
-        ));
-      },
-      child: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.only(left: 20),
-            height: 120,
-            child: Image(
-              image: AssetImage(e.image),
-            ),
-            width: MediaQuery.of(context).size.width / 2.5,
-            decoration: BoxDecoration(
-              color: e.background,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(300),
-                topRight: Radius.circular(300),
-              ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.all(10),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Text(
-                    'FRUIT',
-                    style: TextStyle(
-                        color: MainColor, letterSpacing: 5, fontSize: 10),
-                  ),
-                  Text(
-                    e.name,
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    "⭐ (${e.reviewCount} reviews)",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                    Text(
-                      '\$${e.price} ',
-                      style: TextStyle(
-                          fontSize: 16, color: MainColor.withOpacity(0.75)),
-                    ),
-                    Text(
-                      'per Kg',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    )
-                  ])
-                ]),
-            height: 120,
-            width: MediaQuery.of(context).size.width / 2.5,
-            decoration: BoxDecoration(
-              color: tColor,
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(20),
-                bottomRight: Radius.circular20),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
