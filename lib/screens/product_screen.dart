@@ -9,11 +9,11 @@ class ItemScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: PrimaryColor,
+      backgroundColor: primaryColor,
       appBar: AppBar(
         elevation: 0,
         leadingWidth: 60,
-        backgroundColor: PrimaryColor,
+        backgroundColor: primaryColor,
         toolbarHeight: 80,
         actions: [
           Padding(
@@ -23,7 +23,8 @@ class ItemScreen extends StatelessWidget {
               backgroundColor: const Color.fromARGB(255, 90, 90, 90),
               child: SvgPicture.asset(
                 'assets/icons/cartIcon.svg',
-                color: Colors.white,
+                colorFilter:
+                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
               ),
             ),
           )
@@ -36,35 +37,27 @@ class ItemScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(
-              height: 30,
-            ),
+            const SizedBox(height: 30),
             Text('FRUITS',
                 style: TextStyle(
-                    fontSize: 20, color: MainColor, letterSpacing: 10)),
-            const SizedBox(
-              height: 10,
-            ),
+                    fontSize: 20, color: mainColor, letterSpacing: 10)),
+            const SizedBox(height: 10),
             Text(e.name,
                 style: const TextStyle(
                   fontSize: 30,
                   color: Colors.white,
                 )),
-            const SizedBox(
-              height: 10,
-            ),
+            const SizedBox(height: 10),
             Text(
               "⭐ (${e.reviewCount} reviews)",
               style: const TextStyle(fontSize: 15, color: Colors.grey),
             ),
-            const SizedBox(
-              height: 150,
-            ),
+            const SizedBox(height: 150),
             Expanded(
               child: Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                    color: tColor,
+                    color: textColor,
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(
                           MediaQuery.of(context).size.width / 2.7),
@@ -86,9 +79,7 @@ class ItemScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(
-                        height: 40,
-                      ),
+                      const SizedBox(height: 40),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         crossAxisAlignment: CrossAxisAlignment.center,
@@ -99,12 +90,10 @@ class ItemScreen extends StatelessWidget {
                               Text(
                                 '\$ ${e.price}',
                                 style: TextStyle(
-                                    color: MainColor.withOpacity(0.6),
+                                    color: mainColor.withOpacity(0.6),
                                     fontSize: 35),
                               ),
-                              const SizedBox(
-                                height: 10,
-                              ),
+                              const SizedBox(height: 10),
                               const Text(
                                 "PER KG",
                                 style: TextStyle(
@@ -114,36 +103,37 @@ class ItemScreen extends StatelessWidget {
                             ],
                           ),
                           CircleAvatar(
-                            backgroundColor: iconBack,
+                            backgroundColor: iconBackgroundColor,
                             radius: 30,
                             child: SvgPicture.asset(
                               'assets/icons/heartIcon.svg',
                               height: 24,
                               width: 24,
-                              color: Colors.red,
+                              colorFilter: const ColorFilter.mode(
+                                  Colors.red, BlendMode.srcIn),
                             ),
                           )
                         ],
                       ),
-                      const SizedBox(
-                        height: 40,
-                      ),
+                      const SizedBox(height: 40),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: iconsList
-                            .map((e) => Column(
+                            .map((iconDetail) => Column(
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     CircleAvatar(
                                       radius: 35,
-                                      backgroundColor: iconBack,
-                                      child: SvgPicture.asset(e.image),
+                                      backgroundColor: iconBackgroundColor,
+                                      child: SvgPicture.asset(
+                                        iconDetail.image,
+                                        colorFilter: const ColorFilter.mode(
+                                            Colors.grey, BlendMode.srcIn),
+                                      ),
                                     ),
-                                    const SizedBox(
-                                      height: 10,
-                                    ),
+                                    const SizedBox(height: 10),
                                     Text(
-                                      e.head,
+                                      iconDetail.head,
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
                                           fontSize: 12,
@@ -154,13 +144,11 @@ class ItemScreen extends StatelessWidget {
                                 ))
                             .toList(),
                       ),
-                      const SizedBox(
-                        height: 60,
-                      ),
+                      const SizedBox(height: 60),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          FirstGD(),
+                          firstGestureDetector(),
                           GestureDetector(
                               onTap: () {},
                               child: Container(
@@ -168,9 +156,9 @@ class ItemScreen extends StatelessWidget {
                                     vertical: 10, horizontal: 20),
                                 height: 45,
                                 decoration: BoxDecoration(
-                                    color: MainColor,
-                                    borderRadius:
-                                        const BorderRadius.all(Radius.circular(13))),
+                                    color: mainColor,
+                                    borderRadius: const BorderRadius.all(
+                                        Radius.circular(13))),
                                 child: Row(
                                   children: [
                                     const Text(
@@ -179,14 +167,14 @@ class ItemScreen extends StatelessWidget {
                                         color: Color.fromARGB(255, 6, 2, 67),
                                       ),
                                     ),
-                                    const SizedBox(
-                                      width: 20,
-                                    ),
+                                    const SizedBox(width: 20),
                                     SvgPicture.asset(
                                       'assets/icons/arrowRight.svg',
                                       width: 20,
                                       height: 20,
-                                      color: const Color.fromARGB(255, 6, 2, 67),
+                                      colorFilter: const ColorFilter.mode(
+                                          Color.fromARGB(255, 6, 2, 67),
+                                          BlendMode.srcIn),
                                     ),
                                   ],
                                 ),
@@ -204,12 +192,12 @@ class ItemScreen extends StatelessWidget {
     );
   }
 
-  GestureDetector FirstGD() {
+  GestureDetector firstGestureDetector() {
     return GestureDetector(
       onTap: () {},
       child: Container(
         decoration: BoxDecoration(
-            color: iconBack,
+            color: iconBackgroundColor,
             borderRadius: const BorderRadius.all(Radius.circular(13))),
         child: Row(
           children: [
@@ -219,7 +207,8 @@ class ItemScreen extends StatelessWidget {
                 'assets/icons/minus-solid.svg',
                 width: 14,
                 height: 14,
-                color: const Color.fromARGB(255, 157, 157, 157),
+                colorFilter: const ColorFilter.mode(
+                    Color.fromARGB(255, 157, 157, 157), BlendMode.srcIn),
               ),
             ),
             const Text(
@@ -233,7 +222,8 @@ class ItemScreen extends StatelessWidget {
                 'assets/icons/plus-solid.svg',
                 width: 14,
                 height: 14,
-                color: const Color.fromARGB(255, 157, 157, 157),
+                colorFilter: const ColorFilter.mode(
+                    Color.fromARGB(255, 157, 157, 157), BlendMode.srcIn),
               ),
             ),
           ],

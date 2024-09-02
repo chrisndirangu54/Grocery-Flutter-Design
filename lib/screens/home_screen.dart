@@ -1,20 +1,59 @@
-// ignore_for_file: unused_import, library_private_types_in_public_api
-
 import 'package:flutter/material.dart';
-import '../models/product.dart';
 import '../screens/admin_dashboard_screen.dart';
 import '../screens/cart_screen.dart';
+
+// Define the User class with the necessary properties
+class User {
+  final bool isAdmin;
+
+  User({required this.isAdmin});
+}
+
+// Define the Product class with the necessary properties
+class Product {
+  final String name;
+  final bool isRecentlyBought;
+  final bool isFavorite;
+
+  Product({
+    required this.name,
+    this.isRecentlyBought = false,
+    this.isFavorite = false,
+  });
+}
+
+// Define the ProductList widget for displaying lists of products
+class ProductList extends StatelessWidget {
+  final List<Product> products;
+
+  const ProductList({super.key, required this.products});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return ListTile(
+          title: Text(product.name),
+        );
+      },
+    );
+  }
+}
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  HomeScreenState createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  User user = User(isAdmin: false); // Assuming you have a User class
-  List<Product> products = []; // Your products list
+class HomeScreenState extends State<HomeScreen> {
+  User user = User(isAdmin: false); // Initialize User with isAdmin property
+  List<Product> products = []; // Initialize products list
   List<Product> recentlyBought = [];
   List<Product> favorites = [];
 
@@ -24,9 +63,20 @@ class _HomeScreenState extends State<HomeScreen> {
     fetchProducts();
   }
 
+  // Fetch products from an API (or a mock function for now)
+  Future<List<Product>> fetchProductsFromApi() async {
+    // Replace this with your actual API call to fetch products
+    return [
+      Product(name: 'Apple', isRecentlyBought: true, isFavorite: true),
+      Product(name: 'Banana', isRecentlyBought: false, isFavorite: true),
+      Product(name: 'Orange', isRecentlyBought: true, isFavorite: false),
+      Product(name: 'Milk', isRecentlyBought: false, isFavorite: false),
+      Product(name: 'Bread', isRecentlyBought: false, isFavorite: false),
+    ]; // Return a list of sample products
+  }
+
+  // Fetch products and categorize them into recently bought and favorites
   void fetchProducts() async {
-    // Replace with actual product fetching logic
-    // This is a placeholder
     List<Product> fetchedProducts = await fetchProductsFromApi();
     setState(() {
       products = fetchedProducts;
@@ -36,9 +86,9 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // Predict products that the user may need based on recently bought products
   List<Product> predictProducts(
       List<Product> recentlyBought, List<Product> allProducts) {
-    // Implement your prediction logic
     return allProducts
         .where((p) => !recentlyBought.contains(p))
         .take(5)
@@ -67,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   .push(MaterialPageRoute(builder: (_) => const CartScreen()));
             },
           ),
-          if (user.isAdmin) // Only show this button if the user is an admin
+          if (user.isAdmin)
             IconButton(
               icon: const Icon(Icons.admin_panel_settings),
               onPressed: () {
@@ -122,8 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Navigate to Categories Screen
               },
             ),
-            if (user
-                .isAdmin) // Only show this option in the drawer if the user is an admin
+            if (user.isAdmin)
               ListTile(
                 leading: const Icon(Icons.admin_panel_settings),
                 title: const Text('Admin Dashboard'),
@@ -139,13 +188,37 @@ class _HomeScreenState extends State<HomeScreen> {
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               children: [
-                const SectionHeader(title: 'Favorites'),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Favorites',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
                 ProductList(products: favorites),
-                const SectionHeader(title: 'Recently Bought'),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Recently Bought',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
                 ProductList(products: recentlyBought),
-                const SectionHeader(title: 'You May Also Need'),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'You May Also Need',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
                 ProductList(products: predictedProducts),
-                const SectionHeader(title: 'All Products'),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'All Products',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                ),
                 ProductList(products: products),
               ],
             ),
@@ -167,78 +240,6 @@ class _HomeScreenState extends State<HomeScreen> {
           child: const Icon(Icons.shopping_cart),
         ),
       ),
-    );
-  }
-}
-
-// Placeholder function for fetching products from an API
-Future<List<Product>> fetchProductsFromApi() async {
-  // Replace with your API fetching logic
-  return [
-    // Example products
-    Product(id: '1', name: 'Apple', isRecentlyBought: true, isFavorite: true),
-    Product(id: '2', name: 'Banana', isRecentlyBought: true),
-    Product(id: '3', name: 'Carrot', isFavorite: true),
-  ];
-}
-
-// Example Product class
-class Product {
-  final String id;
-  final String name;
-  final bool isRecentlyBought;
-  final bool isFavorite;
-
-  Product({
-    required this.id,
-    required this.name,
-    this.isRecentlyBought = false,
-    this.isFavorite = false,
-  });
-}
-
-// Example User class
-class User {
-  final bool isAdmin;
-
-  User({required this.isAdmin});
-}
-
-// Placeholder SectionHeader widget
-class SectionHeader extends StatelessWidget {
-  final String title;
-
-  const SectionHeader({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Text(
-        title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-  }
-}
-
-// Placeholder ProductList widget
-class ProductList extends StatelessWidget {
-  final List<Product> products;
-
-  const ProductList({super.key, required this.products});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: products
-          .map((product) => ListTile(
-                title: Text(product.name),
-              ))
-          .toList(),
     );
   }
 }

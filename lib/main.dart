@@ -1,4 +1,3 @@
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -96,7 +95,7 @@ class MyApp extends StatelessWidget {
         ),
         routes: {
           '/login': (ctx) => LoginScreen(),
-          '/register': (ctx) => RegisterScreen(),
+          '/register': (ctx) => const RegisterScreen(),
           '/password-retrieval': (ctx) => const PasswordRetrievalScreen(),
         },
       ),
@@ -116,7 +115,7 @@ class HomeScreen extends StatelessWidget {
         actions: [
           SvgPicture.asset(
             'assets/icons/cartIcon.svg',
-            color: Colors.white,
+            colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
           ),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),

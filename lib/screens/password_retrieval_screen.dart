@@ -1,17 +1,17 @@
-// ignore_for_file: library_private_types_in_public_api
-
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class PasswordRetrievalScreen extends StatefulWidget {
   const PasswordRetrievalScreen({super.key});
 
   @override
-  _PasswordRetrievalScreenState createState() => _PasswordRetrievalScreenState();
+  PasswordRetrievalScreenState createState() => PasswordRetrievalScreenState();
 }
 
-class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
+class PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,10 @@ class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Enter your email to retrieve your password', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                'Enter your email to retrieve your password',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _emailController,
@@ -40,18 +43,7 @@ class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
               ),
               const SizedBox(height: 20),
               ElevatedButton(
-                onPressed: () async {
-                  if (_formKey.currentState!.validate()) {
-                    // Simulate sending password retrieval email
-                    try {
-                      // Implement your backend password retrieval logic here
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password retrieval email sent')));
-                      Navigator.of(context).pop(); // Go back to the login screen
-                    } catch (error) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password retrieval failed')));
-                    }
-                  }
-                },
+                onPressed: _handlePasswordRetrieval,
                 child: const Text('Retrieve Password'),
               ),
             ],
@@ -59,5 +51,46 @@ class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _handlePasswordRetrieval() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      await _auth.sendPasswordResetEmail(
+        email: _emailController.text.trim(),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset email sent')),
+        );
+        Navigator.of(context).pop(); // Go back to the login screen
+      }
+    } on FirebaseAuthException catch (e) {
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'Invalid email address.';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No user found for that email.';
+          break;
+        default:
+          errorMessage = 'An error occurred. Please try again.';
+      }
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password retrieval failed')),
+        );
+      }
+    }
   }
 }

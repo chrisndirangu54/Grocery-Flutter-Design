@@ -1,19 +1,27 @@
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
 class User {
   final String email;
   final String token;
   final String name;
   final String address;
   final String profilePictureUrl;
-  final List<String> favoriteProductIds; // List of IDs for favorite products
-  final List<String> recentlyBoughtProductIds; // List of IDs for recently bought products
-  final DateTime? lastLoginDate; // Optional: date of the last login
+  final List<String> favoriteProductIds;
+  final List<String> recentlyBoughtProductIds;
+  final DateTime? lastLoginDate;
 
   // Admin-specific fields
-  final bool isAdmin; // Determines if the user has admin privileges
-  final bool canManageUsers; // Permission to manage users (for admin)
-  final bool canManageProducts; // Permission to manage products (for admin)
-  final bool canViewReports; // Permission to view reports (for admin)
-  final bool canEditSettings; // Permission to edit system settings (for admin)
+  final bool isAdmin;
+  final bool canManageUsers;
+  final bool canManageProducts;
+  final bool canViewReports;
+  final bool canEditSettings;
+
+  // Rider-specific fields
+  final bool isRider; // Determines if the user is a rider
+  final bool isAvailableForDelivery; // Indicates if the rider is available
+  final LatLng?
+      liveLocation; // Rider's live location (using Google Maps LatLng type)
 
   User({
     required this.email,
@@ -21,14 +29,17 @@ class User {
     required this.name,
     required this.address,
     required this.profilePictureUrl,
-    this.favoriteProductIds = const [], // Initialize to an empty list
-    this.recentlyBoughtProductIds = const [], // Initialize to an empty list
-    this.lastLoginDate, // Optional field for last login date
-    this.isAdmin = false, // Default to non-admin
+    this.favoriteProductIds = const [],
+    this.recentlyBoughtProductIds = const [],
+    this.lastLoginDate,
+    this.isAdmin = false,
     this.canManageUsers = false,
     this.canManageProducts = false,
     this.canViewReports = false,
     this.canEditSettings = false,
+    this.isRider = false, // Default to non-rider
+    this.isAvailableForDelivery = false, // Default to not available
+    this.liveLocation, // Optional live location
   });
 
   // Factory constructor to create a User instance from JSON data
@@ -40,15 +51,21 @@ class User {
       address: json['address'],
       profilePictureUrl: json['profilePictureUrl'],
       favoriteProductIds: List<String>.from(json['favoriteProductIds'] ?? []),
-      recentlyBoughtProductIds: List<String>.from(json['recentlyBoughtProductIds'] ?? []),
-      lastLoginDate: json['lastLoginDate'] != null 
-          ? DateTime.parse(json['lastLoginDate']) 
+      recentlyBoughtProductIds:
+          List<String>.from(json['recentlyBoughtProductIds'] ?? []),
+      lastLoginDate: json['lastLoginDate'] != null
+          ? DateTime.parse(json['lastLoginDate'])
           : null,
       isAdmin: json['isAdmin'] ?? false,
       canManageUsers: json['canManageUsers'] ?? false,
       canManageProducts: json['canManageProducts'] ?? false,
       canViewReports: json['canViewReports'] ?? false,
       canEditSettings: json['canEditSettings'] ?? false,
+      isRider: json['isRider'] ?? false,
+      isAvailableForDelivery: json['isAvailableForDelivery'] ?? false,
+      liveLocation: json['liveLocation'] != null
+          ? LatLng(json['liveLocation']['lat'], json['liveLocation']['lng'])
+          : null,
     );
   }
 
@@ -68,6 +85,11 @@ class User {
       'canManageProducts': canManageProducts,
       'canViewReports': canViewReports,
       'canEditSettings': canEditSettings,
+      'isRider': isRider,
+      'isAvailableForDelivery': isAvailableForDelivery,
+      'liveLocation': liveLocation != null
+          ? {'lat': liveLocation!.latitude, 'lng': liveLocation!.longitude}
+          : null,
     };
   }
 }

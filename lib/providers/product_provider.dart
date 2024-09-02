@@ -1,73 +1,116 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import '../models/product.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductProvider with ChangeNotifier {
-  final List<Product> _products = [];
-  final List<Product> _favorites = [];
-  final List<Product> _recentlyBought = [];
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Getter to retrieve the list of products
-  List<Product> get products => _products;
+  // Stream controllers for real-time product updates
+  final StreamController<List<Product>> _productsStreamController =
+      StreamController.broadcast();
+  final StreamController<List<Product>> _favoritesStreamController =
+      StreamController.broadcast();
+  final StreamController<List<Product>> _recentlyBoughtStreamController =
+      StreamController.broadcast();
 
-  // Getter to retrieve the list of favorite products
-  List<Product> get favorites => _favorites;
+  // Getters for product streams
+  Stream<List<Product>> get productsStream => _productsStreamController.stream;
+  Stream<List<Product>> get favoritesStream =>
+      _favoritesStreamController.stream;
+  Stream<List<Product>> get recentlyBoughtStream =>
+      _recentlyBoughtStreamController.stream;
 
-  // Getter to retrieve the list of recently bought products
-  List<Product> get recentlyBought => _recentlyBought;
-  Future<void> _fetchData(String endpoint, List<Product> listToUpdate) async {
-    final response =
-        await http.get(Uri.parse('http://localhost:5000/$endpoint'));
+  // Generic method to fetch data from Firestore and populate the corresponding stream
+  Future<void> _fetchData(String collectionName,
+      StreamController<List<Product>> streamController) async {
+    try {
+      final querySnapshot = await _firestore.collection(collectionName).get();
+      final products =
+          querySnapshot.docs.map((doc) => Product.fromFirestore(doc)).toList();
+      streamController.add(products);
+    } on FirebaseException catch (e) {
+      // Handle errors appropriately (e.g., show a snackbar or log the error)
+      print("Error fetching data from $collectionName: $e");
+    }
+  }
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      listToUpdate.clear(); // Clear the list before updating
-      listToUpdate.addAll(data.map((item) => Product.fromJson(item)).toList());
-      notifyListeners();
+  // Public methods to fetch products, favorites, and recently bought items
+  Future<void> fetchProducts() async =>
+      _fetchData('products', _productsStreamController);
+  Future<void> fetchFavorites() async =>
+      _fetchData('favorites', _favoritesStreamController);
+  Future<void> fetchRecentlyBought() async =>
+      _fetchData('recently-bought', _recentlyBoughtStreamController);
+
+  // Method to toggle the favorite status of a product
+  Future<void> toggleFavoriteStatus(Product product) async {
+    final docRef = _firestore.collection('favorites').doc(product.id);
+    final isFavorite = await docRef.get().then((doc) => doc.exists);
+
+    if (isFavorite) {
+      await docRef.delete();
     } else {
-      throw Exception('Failed to load $endpoint');
+      await docRef.set(product.toMap());
     }
+
+    await fetchFavorites(); // Refresh the favorites stream after toggling
   }
 
-  // Method to fetch data
-  Future<void> fetchProducts() async {
-    await _fetchData('products', _products);
+  // Method to add a product to the recently bought list
+  Future<void> addRecentlyBought(Product product) async {
+    final docRef = _firestore.collection('recently-bought').doc(product.id);
+    await docRef.set(product.toMap());
+
+    await fetchRecentlyBought(); // Refresh the recently bought stream after adding
   }
 
-  Future<void> fetchFavorites() async {
-    await _fetchData('favorites', _favorites);
-  }
-
-  Future<void> fetchRecentlyBought() async {
-    await _fetchData('recently-bought', _recentlyBought);
-  }
-
-  // Method to update a product as a favorite
-  void toggleFavoriteStatus(Product product) {
-    if (_favorites.contains(product)) {
-      _favorites.remove(product);
-    } else {
-      _favorites.add(product);
-    }
-    notifyListeners();
-  }
-
-  // Method to add a product to recently bought list
-  void addRecentlyBought(Product product) {
-    _recentlyBought.add(product);
-    // Optionally, you could limit the size of recently bought products list
-    if (_recentlyBought.length > 10) {
-      _recentlyBought.removeAt(0); // Remove the oldest entry
-    }
-    notifyListeners();
-  }
-
-  // Method to clear all product lists (optional)
+  // Optional method to clear all product lists
   void clearData() {
-    _favorites.clear();
-    _recentlyBought.clear();
-    notifyListeners();
+    _productsStreamController.add([]);
+    _favoritesStreamController.add([]);
+    _recentlyBoughtStreamController.add([]);
+  }
+
+  @override
+  void dispose() {
+    _productsStreamController.close();
+    _favoritesStreamController.close();
+    _recentlyBoughtStreamController.close();
+    super.dispose();
+  }
+}
+
+// Assuming this is in the same file for simplicity
+class Product {
+  final String id;
+  final String name;
+  final double price;
+  // Add other fields as necessary
+
+  Product({
+    required this.id,
+    required this.name,
+    required this.price,
+    // Initialize other fields here
+  });
+
+  // Factory method to create a Product object from Firestore data
+  factory Product.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return Product(
+      id: doc.id,
+      name: data['name'],
+      price: data['price'],
+      // Initialize other fields from the Firestore data
+    );
+  }
+
+  // Convert Product object to a map that can be saved to Firestore
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'price': price,
+      // Add other fields here
+    };
   }
 }

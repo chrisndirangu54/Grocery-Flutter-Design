@@ -96,8 +96,8 @@ class LoginScreen extends StatelessWidget {
                 try {
                   await Provider.of<AuthProvider>(context, listen: false)
                       .login(_emailController.text, _passwordController.text);
-                  Navigator.of(context).pushReplacement(MaterialPageRoute(
-                      builder: (_) => const HomeScreen()));
+                  Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const HomeScreen()));
                 } catch (error) {
                   ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Login failed')));
@@ -118,8 +118,8 @@ class LoginScreen extends StatelessWidget {
           const SizedBox(height: 10),
           FloatingActionButton.extended(
             onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PasswordRetrievalScreen()));
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (_) => const PasswordRetrievalScreen()));
             },
             label: const Text('Forgot Password?'),
             icon: const Icon(Icons.lock_reset),

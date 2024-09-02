@@ -4,45 +4,122 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import '../providers/cart_provider.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
 
-  Future<void> _initiatePayment(BuildContext context) async {
+  @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  void _selectPaymentMethod() {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Container(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.credit_card),
+                title: const Text('Visa/MasterCard'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _processVisaMasterCardPayment();
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.phone_android),
+                title: const Text('M-Pesa Paybill'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _processMpesaPayment();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _processVisaMasterCardPayment() async {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+
+    try {
+      // Integrate your payment gateway SDK here
+      // Example: Stripe/PayPal API for processing Visa/MasterCard payments.
+
+      // Mocking the process for demonstration
+      final response = await Future.delayed(
+          const Duration(seconds: 2), () => {'status': 'success'});
+
+      if (!mounted) return;
+
+      if (response['status'] == 'success') {
+        _showSuccessDialog('Payment Successful');
+        cart.clearCart();
+      } else {
+        _showErrorSnackBar('Payment Failed');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorSnackBar('Payment Failed');
+    }
+  }
+
+  Future<void> _processMpesaPayment() async {
     final cart = Provider.of<CartProvider>(context, listen: false);
     final totalAmount = cart.totalAmount;
 
     try {
-      final HttpsCallable callable = FirebaseFunctions.instance.httpsCallable('initiatePayment');
+      final HttpsCallable callable =
+          FirebaseFunctions.instance.httpsCallable('initiateMpesaPayment');
       final response = await callable.call({
         'amount': totalAmount,
-        'phoneNumber': '2547XXXXXXXX' // Replace with the actual phone number
+        'phoneNumber': '2547XXXXXXXX', // Replace with the actual phone number
+        'paybillNumber': '123456', // Replace with actual Paybill Number
+        'accountNumber':
+            'YourAccountNumber', // Replace with your Account Number
       });
 
-      // Handle successful payment initiation
-      print('Payment initiated: ${response.data}');
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Payment Initiated'),
-          content: const Text('Please follow the instructions to complete your payment.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(ctx).pop();
-                cart.clearCart();
-              },
-              child: const Text('Done'),
-            ),
-          ],
-        ),
-      );
+      if (!mounted) return;
+
+      if (response.data['status'] == 'success') {
+        _showSuccessDialog('M-Pesa Payment Initiated');
+        cart.clearCart();
+      } else {
+        _showErrorSnackBar('M-Pesa Payment Failed');
+      }
     } catch (e) {
-      // Handle errors
-      print('Error initiating payment: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to initiate payment')),
-      );
+      if (!mounted) return;
+      _showErrorSnackBar('M-Pesa Payment Failed');
     }
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Success'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+            },
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
@@ -58,17 +135,17 @@ class CartScreen extends StatelessWidget {
             child: ListView.builder(
               itemCount: cart.items.length,
               itemBuilder: (ctx, i) => Container(
-                margin: const EdgeInsets.symmetric(
-                    vertical: 8.0, horizontal: 16.0),
+                margin:
+                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 padding: const EdgeInsets.all(8.0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(8.0),
-                  boxShadow: [
+                  boxShadow: const [
                     BoxShadow(
                       color: Colors.black26,
                       blurRadius: 8.0,
-                      offset: const Offset(0, 4),
+                      offset: Offset(0, 4),
                     ),
                   ],
                 ),
@@ -91,11 +168,11 @@ class CartScreen extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(8.0),
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 8.0,
-                  offset: const Offset(0, 4),
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -105,19 +182,17 @@ class CartScreen extends StatelessWidget {
         ],
       ),
       floatingActionButton: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
               blurRadius: 8.0,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
         child: FloatingActionButton.extended(
-          onPressed: () {
-            _initiatePayment(context);
-          },
+          onPressed: _selectPaymentMethod,
           label: const Text('Checkout'),
           icon: const Icon(Icons.payment),
         ),

@@ -29,11 +29,13 @@ List<Item> itemList = [
   ),
 ];
 
-Color MainColor = const Color(0XFFF4C750);
-Color PrimaryColor = const Color(0XFF1E1E1E);
-Color SecondaryColor = const Color(0XFF2C2C2C);
-Color tColor = const Color(0XFF161616);
-Color iconBack = const Color(0XFF262626);
+// Rename color variables to follow lowerCamelCase
+Color mainColor = const Color(0XFFF4C750);
+Color primaryColor = const Color(0XFF1E1E1E);
+Color secondaryColor = const Color(0XFF2C2C2C);
+Color textColor = const Color(0XFF161616); // Renamed tColor to textColor
+Color iconBackgroundColor =
+    const Color(0XFF262626); // Renamed iconBack to iconBackgroundColor
 
 class IconDetail {
   final String image;
