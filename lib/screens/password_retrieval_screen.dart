@@ -1,6 +1,10 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 
 class PasswordRetrievalScreen extends StatefulWidget {
+  const PasswordRetrievalScreen({super.key});
+
   @override
   _PasswordRetrievalScreenState createState() => _PasswordRetrievalScreenState();
 }
@@ -13,7 +17,7 @@ class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Password Retrieval'),
+        title: const Text('Password Retrieval'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -22,11 +26,11 @@ class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Enter your email to retrieve your password', style: Theme.of(context).textTheme.headline6),
-              SizedBox(height: 20),
+              Text('Enter your email to retrieve your password', style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: const InputDecoration(labelText: 'Email'),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
@@ -34,21 +38,21 @@ class _PasswordRetrievalScreenState extends State<PasswordRetrievalScreen> {
                   return null;
                 },
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
                   if (_formKey.currentState!.validate()) {
                     // Simulate sending password retrieval email
                     try {
                       // Implement your backend password retrieval logic here
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password retrieval email sent')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password retrieval email sent')));
                       Navigator.of(context).pop(); // Go back to the login screen
                     } catch (error) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Password retrieval failed')));
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password retrieval failed')));
                     }
                   }
                 },
-                child: Text('Retrieve Password'),
+                child: const Text('Retrieve Password'),
               ),
             ],
           ),

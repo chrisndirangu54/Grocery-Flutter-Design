@@ -1,77 +1,54 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
+// ignore_for_file: unused_import, library_private_types_in_public_api
 
-import '../providers/product_provider.dart';
-import '../screens/product_screen.dart';
+import 'package:flutter/material.dart';
+import '../models/product.dart';
+import '../screens/admin_dashboard_screen.dart';
 import '../screens/cart_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  // Method to send a message via WhatsApp
-  void _sendMessage() async {
-    final message = 'Hello, I need help with my order!';
-    final phoneNumber = '+1234567890'; // Replace with the recipient's phone number
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
 
-    final url = 'https://wa.me/$phoneNumber?text=${Uri.encodeComponent(message)}';
+class _HomeScreenState extends State<HomeScreen> {
+  User user = User(isAdmin: false); // Assuming you have a User class
+  List<Product> products = []; // Your products list
+  List<Product> recentlyBought = [];
+  List<Product> favorites = [];
 
-    if (await canLaunch(url)) {
-      await launch(url);
-    } else {
-      throw 'Could not launch $url';
-    }
+  @override
+  void initState() {
+    super.initState();
+    fetchProducts();
   }
 
-  List<Product> predictProducts(List<Product> recentPurchases, List<Product> allProducts) {
-    // Initialize scores for each product
-    Map<Product, double> productScores = {};
+  void fetchProducts() async {
+    // Replace with actual product fetching logic
+    // This is a placeholder
+    List<Product> fetchedProducts = await fetchProductsFromApi();
+    setState(() {
+      products = fetchedProducts;
+      recentlyBought =
+          fetchedProducts.where((p) => p.isRecentlyBought).toList();
+      favorites = fetchedProducts.where((p) => p.isFavorite).toList();
+    });
+  }
 
-    // Scoring based on purchase frequency and time since last purchase
-    for (var product in allProducts) {
-      double score = 0;
-
-      // Frequency: More frequent purchases get higher scores
-      int frequency = recentPurchases.where((p) => p == product).length;
-      score += frequency * 2;
-
-      // Time since last purchase: Longer time means higher need
-      DateTime? lastPurchaseDate = product.lastPurchaseDate; // Assume this is provided
-      if (lastPurchaseDate != null) {
-        int daysSinceLastPurchase = DateTime.now().difference(lastPurchaseDate).inDays;
-        score += daysSinceLastPurchase / 30.0; // Normalize by month
-      }
-
-      // Complementary products: Add score if a complementary product was recently bought
-      for (var recentProduct in recentPurchases) {
-        if (product.isComplementaryTo(recentProduct)) { // Assume this method is implemented
-          score += 5;
-        }
-      }
-
-      // Category preference: Score products in the same category as recent purchases
-      if (recentPurchases.any((p) => p.category == product.category)) {
-        score += 3;
-      }
-
-      // Seasonal products: Higher score if it's the right season for the product
-      if (product.isInSeason()) { // Assume this method is implemented
-        score += 4;
-      }
-
-      // Assign the final score to the product
-      productScores[product] = score;
-    }
-
-    // Sort products based on their scores in descending order and return the top 10
-    List<Product> sortedProducts = productScores.keys.toList()
-      ..sort((a, b) => productScores[b]!.compareTo(productScores[a]!));
-    
-    return sortedProducts.take(10).toList();
+  List<Product> predictProducts(
+      List<Product> recentlyBought, List<Product> allProducts) {
+    // Implement your prediction logic
+    return allProducts
+        .where((p) => !recentlyBought.contains(p))
+        .take(5)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
+    List<Product> predictedProducts = predictProducts(recentlyBought, products);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Sokoni\'s Grocery'),
@@ -90,10 +67,14 @@ class HomeScreen extends StatelessWidget {
                   .push(MaterialPageRoute(builder: (_) => const CartScreen()));
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.message),
-            onPressed: _sendMessage,
-          ),
+          if (user.isAdmin) // Only show this button if the user is an admin
+            IconButton(
+              icon: const Icon(Icons.admin_panel_settings),
+              onPressed: () {
+                Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => const AdminDashboardScreen()));
+              },
+            ),
         ],
       ),
       drawer: Drawer(
@@ -141,51 +122,40 @@ class HomeScreen extends StatelessWidget {
                 // Navigate to Categories Screen
               },
             ),
+            if (user
+                .isAdmin) // Only show this option in the drawer if the user is an admin
+              ListTile(
+                leading: const Icon(Icons.admin_panel_settings),
+                title: const Text('Admin Dashboard'),
+                onTap: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                      builder: (_) => const AdminDashboardScreen()));
+                },
+              ),
           ],
         ),
       ),
-      body: FutureBuilder(
-        future: Provider.of<ProductProvider>(context, listen: false)
-            .fetchProducts(),
-        builder: (ctx, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('An error occurred!'));
-          } else {
-            return Consumer<ProductProvider>(
-              builder: (ctx, productProvider, child) {
-                List<Product> recentlyBought = productProvider.recentlyBought;
-                List<Product> favorites = productProvider.favorites;
-                List<Product> predictedProducts = predictProducts(recentlyBought, productProvider.products);
-
-                return ListView(
-                  children: [
-                    SectionHeader(title: 'Favorites'),
-                    ProductList(products: favorites),
-
-                    SectionHeader(title: 'Recently Bought'),
-                    ProductList(products: recentlyBought),
-
-                    SectionHeader(title: 'You May Also Need'),
-                    ProductList(products: predictedProducts),
-
-                    SectionHeader(title: 'All Products'),
-                    ProductList(products: productProvider.products),
-                  ],
-                );
-              },
-            );
-          }
-        },
-      ),
+      body: products.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              children: [
+                const SectionHeader(title: 'Favorites'),
+                ProductList(products: favorites),
+                const SectionHeader(title: 'Recently Bought'),
+                ProductList(products: recentlyBought),
+                const SectionHeader(title: 'You May Also Need'),
+                ProductList(products: predictedProducts),
+                const SectionHeader(title: 'All Products'),
+                ProductList(products: products),
+              ],
+            ),
       floatingActionButton: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           boxShadow: [
             BoxShadow(
               color: Colors.black26,
               blurRadius: 8.0,
-              offset: const Offset(0, 4),
+              offset: Offset(0, 4),
             ),
           ],
         ),
@@ -201,19 +171,53 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
+// Placeholder function for fetching products from an API
+Future<List<Product>> fetchProductsFromApi() async {
+  // Replace with your API fetching logic
+  return [
+    // Example products
+    Product(id: '1', name: 'Apple', isRecentlyBought: true, isFavorite: true),
+    Product(id: '2', name: 'Banana', isRecentlyBought: true),
+    Product(id: '3', name: 'Carrot', isFavorite: true),
+  ];
+}
+
+// Example Product class
+class Product {
+  final String id;
+  final String name;
+  final bool isRecentlyBought;
+  final bool isFavorite;
+
+  Product({
+    required this.id,
+    required this.name,
+    this.isRecentlyBought = false,
+    this.isFavorite = false,
+  });
+}
+
+// Example User class
+class User {
+  final bool isAdmin;
+
+  User({required this.isAdmin});
+}
+
+// Placeholder SectionHeader widget
 class SectionHeader extends StatelessWidget {
   final String title;
 
-  const SectionHeader({required this.title, super.key});
+  const SectionHeader({super.key, required this.title});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(8.0),
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
       ),
@@ -221,40 +225,20 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+// Placeholder ProductList widget
 class ProductList extends StatelessWidget {
   final List<Product> products;
 
-  const ProductList({required this.products, super.key});
+  const ProductList({super.key, required this.products});
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: products.length,
-      itemBuilder: (ctx, i) => Container(
-        margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-        padding: const EdgeInsets.all(8.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(8.0),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 8.0,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ListTile(
-          title: Text(products[i].name),
-          subtitle: Text('\$${products[i].price}'),
-          onTap: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (_) => ProductScreen(product: products[i])));
-          },
-        ),
-      ),
+    return Column(
+      children: products
+          .map((product) => ListTile(
+                title: Text(product.name),
+              ))
+          .toList(),
     );
   }
 }

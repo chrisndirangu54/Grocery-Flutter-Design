@@ -29,11 +29,11 @@ List<Item> itemList = [
   ),
 ];
 
-Color MainColor = Color(0XFFF4C750);
-Color PrimaryColor = Color(0XFF1E1E1E);
-Color SecondaryColor = Color(0XFF2C2C2C);
-Color tColor = Color(0XFF161616);
-Color iconBack = Color(0XFF262626);
+Color MainColor = const Color(0XFFF4C750);
+Color PrimaryColor = const Color(0XFF1E1E1E);
+Color SecondaryColor = const Color(0XFF2C2C2C);
+Color tColor = const Color(0XFF161616);
+Color iconBack = const Color(0XFF262626);
 
 class IconDetail {
   final String image;

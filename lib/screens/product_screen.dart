@@ -4,7 +4,7 @@ import 'package:grocerry/utils.dart';
 
 class ItemScreen extends StatelessWidget {
   final Item e;
-  const ItemScreen({Key? key, required this.e}) : super(key: key);
+  const ItemScreen({super.key, required this.e});
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +20,7 @@ class ItemScreen extends StatelessWidget {
             padding: const EdgeInsets.only(right: 40),
             child: CircleAvatar(
               radius: 25,
-              backgroundColor: Color.fromARGB(255, 90, 90, 90),
+              backgroundColor: const Color.fromARGB(255, 90, 90, 90),
               child: SvgPicture.asset(
                 'assets/icons/cartIcon.svg',
                 color: Colors.white,
@@ -30,45 +30,53 @@ class ItemScreen extends StatelessWidget {
         ],
       ),
       body: SafeArea(
-          child: Container(
+          child: SizedBox(
         width: double.infinity,
         height: MediaQuery.of(context).size.height,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(
+            const SizedBox(
               height: 30,
             ),
             Text('FRUITS',
                 style: TextStyle(
                     fontSize: 20, color: MainColor, letterSpacing: 10)),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
             Text(e.name,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 30,
                   color: Colors.white,
                 )),
-            SizedBox(
+            const SizedBox(
               height: 10,
             ),
             Text(
               "⭐ (${e.reviewCount} reviews)",
-              style: TextStyle(fontSize: 15, color: Colors.grey),
+              style: const TextStyle(fontSize: 15, color: Colors.grey),
             ),
-            SizedBox(
+            const SizedBox(
               height: 150,
             ),
             Expanded(
               child: Container(
                 width: double.infinity,
+                decoration: BoxDecoration(
+                    color: tColor,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(
+                          MediaQuery.of(context).size.width / 2.7),
+                      topRight: Radius.circular(
+                          MediaQuery.of(context).size.width / 2.7),
+                    )),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 55),
                   child: Column(
                     children: [
                       Transform.translate(
-                        offset: Offset(10, -40),
+                        offset: const Offset(10, -40),
                         child: Transform.scale(
                           scale: 2.6,
                           child: Image(
@@ -78,7 +86,7 @@ class ItemScreen extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 40,
                       ),
                       Row(
@@ -94,10 +102,10 @@ class ItemScreen extends StatelessWidget {
                                     color: MainColor.withOpacity(0.6),
                                     fontSize: 35),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 10,
                               ),
-                              Text(
+                              const Text(
                                 "PER KG",
                                 style: TextStyle(
                                     color: Color.fromARGB(255, 174, 173, 173),
@@ -117,7 +125,7 @@ class ItemScreen extends StatelessWidget {
                           )
                         ],
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 40,
                       ),
                       Row(
@@ -131,13 +139,13 @@ class ItemScreen extends StatelessWidget {
                                       backgroundColor: iconBack,
                                       child: SvgPicture.asset(e.image),
                                     ),
-                                    SizedBox(
+                                    const SizedBox(
                                       height: 10,
                                     ),
                                     Text(
                                       e.head,
                                       textAlign: TextAlign.center,
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                           fontSize: 12,
                                           color: Color.fromARGB(
                                               255, 157, 157, 157)),
@@ -146,7 +154,7 @@ class ItemScreen extends StatelessWidget {
                                 ))
                             .toList(),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 60,
                       ),
                       Row(
@@ -156,46 +164,38 @@ class ItemScreen extends StatelessWidget {
                           GestureDetector(
                               onTap: () {},
                               child: Container(
-                                padding: EdgeInsets.symmetric(
+                                padding: const EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 20),
                                 height: 45,
+                                decoration: BoxDecoration(
+                                    color: MainColor,
+                                    borderRadius:
+                                        const BorderRadius.all(Radius.circular(13))),
                                 child: Row(
                                   children: [
-                                    Text(
+                                    const Text(
                                       'Go To Cart',
                                       style: TextStyle(
                                         color: Color.fromARGB(255, 6, 2, 67),
                                       ),
                                     ),
-                                    SizedBox(
+                                    const SizedBox(
                                       width: 20,
                                     ),
                                     SvgPicture.asset(
                                       'assets/icons/arrowRight.svg',
                                       width: 20,
                                       height: 20,
-                                      color: Color.fromARGB(255, 6, 2, 67),
+                                      color: const Color.fromARGB(255, 6, 2, 67),
                                     ),
                                   ],
                                 ),
-                                decoration: BoxDecoration(
-                                    color: MainColor,
-                                    borderRadius:
-                                        BorderRadius.all(Radius.circular(13))),
                               ))
                         ],
                       )
                     ],
                   ),
                 ),
-                decoration: BoxDecoration(
-                    color: tColor,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(
-                          MediaQuery.of(context).size.width / 2.7),
-                      topRight: Radius.circular(
-                          MediaQuery.of(context).size.width / 2.7),
-                    )),
               ),
             )
           ],
@@ -208,6 +208,9 @@ class ItemScreen extends StatelessWidget {
     return GestureDetector(
       onTap: () {},
       child: Container(
+        decoration: BoxDecoration(
+            color: iconBack,
+            borderRadius: const BorderRadius.all(Radius.circular(13))),
         child: Row(
           children: [
             IconButton(
@@ -216,10 +219,10 @@ class ItemScreen extends StatelessWidget {
                 'assets/icons/minus-solid.svg',
                 width: 14,
                 height: 14,
-                color: Color.fromARGB(255, 157, 157, 157),
+                color: const Color.fromARGB(255, 157, 157, 157),
               ),
             ),
-            Text(
+            const Text(
               "0",
               style: TextStyle(color: Colors.white, fontSize: 20),
             ),
@@ -230,14 +233,11 @@ class ItemScreen extends StatelessWidget {
                 'assets/icons/plus-solid.svg',
                 width: 14,
                 height: 14,
-                color: Color.fromARGB(255, 157, 157, 157),
+                color: const Color.fromARGB(255, 157, 157, 157),
               ),
             ),
           ],
         ),
-        decoration: BoxDecoration(
-            color: iconBack,
-            borderRadius: BorderRadius.all(Radius.circular(13))),
       ),
     );
   }

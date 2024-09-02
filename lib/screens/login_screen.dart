@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -30,7 +32,7 @@ class LoginScreen extends StatelessWidget {
               children: [
                 Text(
                   'Welcome Back',
-                  style: Theme.of(context).textTheme.headline5?.copyWith(
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                         color: Colors.orange,
                         fontWeight: FontWeight.bold,
                       ),
@@ -117,7 +119,7 @@ class LoginScreen extends StatelessWidget {
           FloatingActionButton.extended(
             onPressed: () {
               Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => PasswordRetrievalScreen()));
+                  MaterialPageRoute(builder: (_) => const PasswordRetrievalScreen()));
             },
             label: const Text('Forgot Password?'),
             icon: const Icon(Icons.lock_reset),

@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../providers/auth_provider.dart';
 import 'login_screen.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
+  const RegisterScreen({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _RegisterScreenState createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _contactController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isAdmin = false;
 
-  RegisterScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final isAdminAllowed = !authProvider._isAdminRegistered;
 
     return Scaffold(
       appBar: AppBar(
@@ -69,12 +73,12 @@ class RegisterScreen extends StatelessWidget {
               ),
               CheckboxListTile(
                 title: const Text('Admin'),
-                value: _isAdmin && isAdminAllowed,
-                onChanged: isAdminAllowed
-                    ? (bool? value) {
-                        _isAdmin = value ?? false;
-                      }
-                    : null, // Disable if admin already registered
+                value: _isAdmin,
+                onChanged: (bool? value) {
+                  setState(() {
+                    _isAdmin = value ?? false;
+                  });
+                },
               ),
               const SizedBox(height: 20),
               ElevatedButton(
@@ -88,10 +92,14 @@ class RegisterScreen extends StatelessWidget {
                         _isAdmin,
                       );
                       Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(builder: (_) => LoginScreen()));
+                        MaterialPageRoute(builder: (_) => LoginScreen()),
+                      );
                     } catch (error) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Registration failed')));
+                        SnackBar(
+                            content: Text(
+                                'Registration failed: ${error.toString()}')),
+                      );
                     }
                   }
                 },
@@ -102,5 +110,13 @@ class RegisterScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _contactController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

@@ -1,17 +1,17 @@
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:grocerry/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 
-import './screens/home_screen.dart';
 import './screens/login_screen.dart';
 import './screens/register_screen.dart';
 import './screens/password_retrieval_screen.dart';
 import './providers/auth_provider.dart';
 import './providers/product_provider.dart';
 import './providers/cart_provider.dart';
-import './providers/profile_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,8 +29,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
-        ChangeNotifierProvider(create: (_) => ProfileProvider(
-            'John Doe', 'john@example.com', 'assets/images/profile_pic.png')),
+        ChangeNotifierProvider(
+            create: (_) => ProfileProvider(
+                  name: 'John Doe',
+                  email: 'john@example.com',
+                  profilePictureUrl: 'assets/images/profile_pic.png',
+                )),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -72,8 +76,7 @@ class MyApp extends StatelessWidget {
             style: ElevatedButton.styleFrom(
               foregroundColor: Colors.white,
               backgroundColor: Colors.orangeAccent,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               elevation: 8,
               shadowColor: Colors.black26,
               shape: RoundedRectangleBorder(
@@ -84,18 +87,17 @@ class MyApp extends StatelessWidget {
         ),
         home: Consumer<AuthProvider>(
           builder: (ctx, authProvider, _) {
-            if (authProvider.user != null) {
+            if (authProvider.user() != null) {
               return const HomeScreen();
             } else {
-              return const LoginScreen();
+              return LoginScreen();
             }
           },
         ),
         routes: {
-          '/login': (ctx) => const LoginScreen(),
-          '/register': (ctx) => const RegisterScreen(),
-          '/password-retrieval': (ctx) =>
-              const PasswordRetrievalScreen(),
+          '/login': (ctx) => LoginScreen(),
+          '/register': (ctx) => RegisterScreen(),
+          '/password-retrieval': (ctx) => const PasswordRetrievalScreen(),
         },
       ),
     );
@@ -110,14 +112,14 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        leading: Icon(Icons.menu),
+        leading: const Icon(Icons.menu),
         actions: [
           SvgPicture.asset(
             'assets/icons/cartIcon.svg',
             color: Colors.white,
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 20),
             child: CircleAvatar(
               backgroundImage: AssetImage('assets/images/profileTwo.jpg'),
             ),
@@ -140,7 +142,7 @@ class HomeScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         "OFFER",
                         style: TextStyle(
                           letterSpacing: 4,
@@ -174,10 +176,9 @@ class HomeScreen extends StatelessWidget {
                           width: 160,
                           padding: const EdgeInsets.symmetric(
                               vertical: 12, horizontal: 16),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: Colors.orangeAccent,
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(13)),
+                            borderRadius: BorderRadius.all(Radius.circular(13)),
                           ),
                           child: const Center(
                             child: Text(
@@ -193,9 +194,9 @@ class HomeScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 50),
-            Row(
+            const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
+              children: [
                 Text(
                   "Fruits",
                   style: TextStyle(

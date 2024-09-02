@@ -7,7 +7,10 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  User? get user => _user;
+  // ignore: unused_field
+  late bool _isAdminRegistered;
+
+  User? user() => _user;
 
   // Login using Firebase Authentication
   Future<void> login(String email, String password) async {
@@ -24,10 +27,12 @@ class AuthProvider with ChangeNotifier {
   }
 
   // Register a new user and store extra fields in Firestore
-  Future<void> register(String email, String password, String contact, bool isAdmin) async {
+  Future<void> register(
+      String email, String password, String contact, bool isAdmin) async {
     try {
       // Create the user using Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
