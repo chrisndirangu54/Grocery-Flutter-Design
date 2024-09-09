@@ -12,7 +12,7 @@ class ProfileProvider with ChangeNotifier {
   final Map<String, String> _addressCache = {};
   final Dio _dio = Dio();
 
-  dynamic orders;
+  dynamic orders = []; // Initialized orders with an empty list
 
   ProfileProvider({
     required String name,
@@ -35,6 +35,8 @@ class ProfileProvider with ChangeNotifier {
   String get pinLocation => _pinLocation;
   String get profilePictureUrl => _profilePictureUrl;
   DateTime? get lastLoginDate => _lastLoginDate;
+
+  get currentUser => null;
 
   // Method to update profile data
   void updateProfile({
@@ -68,9 +70,11 @@ class ProfileProvider with ChangeNotifier {
 
       if (response.statusCode == 200 && response.data['status'] == 'OK') {
         final results = response.data['results'];
-        _address = results.isNotEmpty
-            ? results[0]['formatted_address'] ?? 'Unknown Address'
-            : 'Unknown Address';
+        if (results.isNotEmpty && results[0]['formatted_address'] != null) {
+          _address = results[0]['formatted_address'];
+        } else {
+          _address = 'Unknown Address';
+        }
         _addressCache[pinLocation] = _address;
         _pinLocation = pinLocation;
         notifyListeners();
@@ -108,8 +112,12 @@ class ProfileProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void updateLastLoginDate(DateTime newDate) {
-    _lastLoginDate = newDate;
-    notifyListeners();
+  void updateLastLoginDate(DateTime? newDate) {
+    if (newDate != null) {
+      _lastLoginDate = newDate;
+      notifyListeners();
+    }
   }
+
+  void updateOrderStatus(orderId, String s) {}
 }

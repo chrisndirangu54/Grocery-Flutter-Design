@@ -10,6 +10,10 @@ class User {
   final List<String> recentlyBoughtProductIds;
   final DateTime? lastLoginDate;
 
+  bool canUserManageProducts() {
+    return isAdmin || isAttendant && canManageProducts;
+  }
+
   // Admin-specific fields
   final bool isAdmin;
   final bool canManageUsers;
@@ -22,6 +26,12 @@ class User {
   final bool isAvailableForDelivery; // Indicates if the rider is available
   final LatLng?
       liveLocation; // Rider's live location (using Google Maps LatLng type)
+
+  // Attendant-specific fields
+  final bool isAttendant; // Determines if the user is an attendant
+  final bool
+      canConfirmPreparing; // Indicates if the attendant can confirm preparing
+  final bool canConfirmReadyForDelivery;
 
   User({
     required this.email,
@@ -37,9 +47,12 @@ class User {
     this.canManageProducts = false,
     this.canViewReports = false,
     this.canEditSettings = false,
-    this.isRider = false, // Default to non-rider
-    this.isAvailableForDelivery = false, // Default to not available
-    this.liveLocation, // Optional live location
+    this.isRider = false,
+    this.isAvailableForDelivery = false,
+    this.liveLocation,
+    this.isAttendant = false,
+    this.canConfirmPreparing = false,
+    this.canConfirmReadyForDelivery = false,
   });
 
   // Factory constructor to create a User instance from JSON data
@@ -66,6 +79,9 @@ class User {
       liveLocation: json['liveLocation'] != null
           ? LatLng(json['liveLocation']['lat'], json['liveLocation']['lng'])
           : null,
+      isAttendant: json['isAttendant'] ?? false,
+      canConfirmPreparing: json['canConfirmPreparing'] ?? false,
+      canConfirmReadyForDelivery: json['canConfirmReadyForDelivery'] ?? false,
     );
   }
 
@@ -90,6 +106,57 @@ class User {
       'liveLocation': liveLocation != null
           ? {'lat': liveLocation!.latitude, 'lng': liveLocation!.longitude}
           : null,
+      'isAttendant': isAttendant,
+      'canConfirmPreparing': canConfirmPreparing,
+      'canConfirmReadyForDelivery': canConfirmReadyForDelivery,
     };
+  }
+
+  // CopyWith method
+  User copyWith({
+    String? email,
+    String? token,
+    String? name,
+    String? address,
+    String? profilePictureUrl,
+    List<String>? favoriteProductIds,
+    List<String>? recentlyBoughtProductIds,
+    DateTime? lastLoginDate,
+    bool? isAdmin,
+    bool? canManageUsers,
+    bool? canManageProducts,
+    bool? canViewReports,
+    bool? canEditSettings,
+    bool? isRider,
+    bool? isAvailableForDelivery,
+    LatLng? liveLocation,
+    bool? isAttendant,
+    bool? canConfirmPreparing,
+    bool? canConfirmReadyForDelivery,
+  }) {
+    return User(
+      email: email ?? this.email,
+      token: token ?? this.token,
+      name: name ?? this.name,
+      address: address ?? this.address,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      favoriteProductIds: favoriteProductIds ?? this.favoriteProductIds,
+      recentlyBoughtProductIds:
+          recentlyBoughtProductIds ?? this.recentlyBoughtProductIds,
+      lastLoginDate: lastLoginDate ?? this.lastLoginDate,
+      isAdmin: isAdmin ?? this.isAdmin,
+      canManageUsers: canManageUsers ?? this.canManageUsers,
+      canManageProducts: canManageProducts ?? this.canManageProducts,
+      canViewReports: canViewReports ?? this.canViewReports,
+      canEditSettings: canEditSettings ?? this.canEditSettings,
+      isRider: isRider ?? this.isRider,
+      isAvailableForDelivery:
+          isAvailableForDelivery ?? this.isAvailableForDelivery,
+      liveLocation: liveLocation ?? this.liveLocation,
+      isAttendant: isAttendant ?? this.isAttendant,
+      canConfirmPreparing: canConfirmPreparing ?? this.canConfirmPreparing,
+      canConfirmReadyForDelivery:
+          canConfirmReadyForDelivery ?? this.canConfirmReadyForDelivery,
+    );
   }
 }

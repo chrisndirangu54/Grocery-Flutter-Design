@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'admin_add_product_screen.dart';
 import 'admin_user_management_screen.dart';
+import 'admin_offers_screen.dart';
 
 class AdminDashboardScreen extends StatelessWidget {
   const AdminDashboardScreen({super.key});
@@ -57,6 +58,24 @@ class AdminDashboardScreen extends StatelessWidget {
                 textStyle: const TextStyle(fontSize: 18),
               ),
               child: const Text('Add Products'),
+            ),
+            const SizedBox(height: 20),
+            // Create Offers Button
+            ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AdminOffersScreen(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.all(16),
+                backgroundColor: Colors.orange,
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              child: const Text('Create Offers'),
             ),
             const SizedBox(height: 20),
             // Additional Admin Actions can be added here

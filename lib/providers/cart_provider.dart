@@ -8,7 +8,7 @@ class CartProvider with ChangeNotifier {
 
   Map<String, CartItem> get items => _items;
 
-  void addItem(Product product) {
+  void addItem(Product product, String title, double discountedPrice) {
     if (_items.containsKey(product.id)) {
       _items.update(
         product.id,

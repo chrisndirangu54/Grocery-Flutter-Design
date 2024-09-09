@@ -101,8 +101,10 @@ class ProfileScreen extends StatelessWidget {
               ),
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) =>
-                      OrderDetailsScreen(orderId: order.orderId),
+                  builder: (context) => OrderDetailsScreen(
+                    orderId: order.orderId,
+                    profileProvider: profileProvider,
+                  ),
                 ));
               },
             );

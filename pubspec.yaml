@@ -46,6 +46,12 @@ dependencies:
   geolocator: any
   firebase_messaging: any
   permission_handler: any
+  firebase_database: ^11.1.0
+  image: ^3.0.1
+  firebase_storage: ^12.2.0  # For Firebase Storage
+  intl: any
+  cached_network_image: ^3.2.3 # You can specify the latest version here
+  flutter_local_notifications: any
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -72,6 +78,15 @@ flutter:
   assets:
     - assets/images/
     - assets/icons/
+    - assets/logo_animation.gif
+
+
+
+
+
+
+
+  
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

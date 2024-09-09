@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:grocerry/providers/order_provider.dart';
+import 'package:grocerry/screens/pending_deliveries_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -107,7 +109,22 @@ class _CartScreenState extends State<CartScreen> {
         actions: [
           TextButton(
             onPressed: () {
+              // Assuming we add the order to pending deliveries after checkout
+              Provider.of<OrderProvider>(context, listen: false).addOrder(
+                Order(
+                  id: '126', // Generate a real order ID
+                  description: 'New Order - Your Cart Description',
+                  status: 'Pending',
+                ),
+              );
+
               Navigator.of(ctx).pop();
+              // Navigate to Pending Deliveries Screen
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => const PendingDeliveriesScreen(),
+                ),
+              );
             },
             child: const Text('Done'),
           ),

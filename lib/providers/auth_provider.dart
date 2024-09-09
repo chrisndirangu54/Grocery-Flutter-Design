@@ -7,10 +7,16 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ignore: unused_field
-  late bool _isAdminRegistered;
+  // Getter for the current user
+  User? get user => _user;
 
-  User? user() => _user;
+  // Check if a user is logged in
+  bool get isLoggedIn => _user != null;
+
+  AuthProvider() {
+    // Initialize the user state on startup
+    _user = _auth.currentUser;
+  }
 
   // Login using Firebase Authentication
   Future<void> login(String email, String password) async {
@@ -22,7 +28,7 @@ class AuthProvider with ChangeNotifier {
       _user = userCredential.user;
       notifyListeners();
     } catch (e) {
-      throw Exception('Failed to login: $e');
+      _handleAuthError(e);
     }
   }
 
@@ -30,7 +36,6 @@ class AuthProvider with ChangeNotifier {
   Future<void> register(
       String email, String password, String contact, bool isAdmin) async {
     try {
-      // Create the user using Firebase Authentication
       UserCredential userCredential =
           await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -38,7 +43,7 @@ class AuthProvider with ChangeNotifier {
       );
       _user = userCredential.user;
 
-      // Store additional data in Firestore
+      // Store additional user data in Firestore
       await _firestore.collection('users').doc(_user!.uid).set({
         'email': email,
         'contact': contact,
@@ -48,14 +53,46 @@ class AuthProvider with ChangeNotifier {
 
       notifyListeners();
     } catch (e) {
-      throw Exception('Failed to register: $e');
+      _handleAuthError(e);
     }
   }
 
   // Logout the user
   Future<void> logout() async {
-    await _auth.signOut();
-    _user = null;
-    notifyListeners();
+    try {
+      await _auth.signOut();
+      _user = null;
+      notifyListeners();
+    } catch (e) {
+      _handleAuthError(e);
+    }
+  }
+
+  // Private method to handle authentication errors
+  void _handleAuthError(Object error) {
+    String errorMessage;
+
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'invalid-email':
+          errorMessage = 'The email address is badly formatted.';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No user found for that email.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Wrong password provided.';
+          break;
+        case 'email-already-in-use':
+          errorMessage = 'The account already exists for that email.';
+          break;
+        default:
+          errorMessage = 'An unknown error occurred.';
+      }
+    } else {
+      errorMessage = 'An error occurred. Please try again later.';
+    }
+
+    throw Exception(errorMessage);
   }
 }

@@ -1,43 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:grocerry/providers/profile_provider.dart'; // Adjust import if needed
+import 'package:geolocator/geolocator.dart'; // Ensure this import is present
+import 'package:grocerry/providers/profile_provider.dart';
+import '../services/rider_location_service.dart';
 
-class TrackingScreen extends StatelessWidget {
+class TrackingScreen extends StatefulWidget {
   final String orderId;
-  final ProfileProvider profileProvider; // Pass the ProfileProvider directly
+  final ProfileProvider profileProvider;
+  final RiderLocationService riderLocationService;
 
-  const TrackingScreen(
-      {super.key, required this.orderId, required this.profileProvider});
+  const TrackingScreen({
+    super.key,
+    required this.orderId,
+    required this.profileProvider,
+    required this.riderLocationService,
+  });
+
+  @override
+  TrackingScreenState createState() => TrackingScreenState();
+}
+
+class TrackingScreenState extends State<TrackingScreen> {
+  Stream<LatLng> getRiderLocationStream() {
+    // Transform the Stream<Position> to Stream<LatLng>
+    return widget.riderLocationService
+        .getRiderLocationStream(widget.orderId as LocationAccuracy)
+        .map((Position position) {
+      return LatLng(position.latitude, position.longitude);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    final order =
-        profileProvider.orders.firstWhere((o) => o.orderId == orderId);
-
-    LatLng riderLocation = const LatLng(0, 0);
-    final locationParts = order.riderLocation.split(',');
-    if (locationParts.length == 2) {
-      riderLocation = LatLng(
-        double.parse(locationParts[0].trim()),
-        double.parse(locationParts[1].trim()),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Track Rider'),
       ),
-      body: GoogleMap(
-        initialCameraPosition: CameraPosition(
-          target: riderLocation,
-          zoom: 15,
-        ),
-        markers: {
-          Marker(
-            markerId: MarkerId(orderId),
-            position: riderLocation,
-            infoWindow: const InfoWindow(title: 'Rider Location'),
-          ),
+      body: StreamBuilder<LatLng>(
+        stream: getRiderLocationStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text('Error fetching rider location'));
+          }
+
+          if (!snapshot.hasData) {
+            return const Center(child: Text('No rider location data'));
+          }
+
+          final LatLng riderLocation = snapshot.data!;
+
+          return GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: riderLocation,
+              zoom: 15,
+            ),
+            markers: {
+              Marker(
+                markerId: MarkerId(widget.orderId),
+                position: riderLocation,
+                infoWindow: const InfoWindow(title: 'Rider Location'),
+              ),
+            },
+          );
         },
       ),
     );

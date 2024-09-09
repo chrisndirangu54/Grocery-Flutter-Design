@@ -1,16 +1,24 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Product {
   final String id;
   final String name;
   final double price;
   final String description;
-  final String category;    // Category of the product (e.g., fruits, vegetables)
-  final String variety;     // Specific variety or type within the category
-  final String pictureUrl;  // URL of the picture representing the variety
-  final DateTime? lastPurchaseDate; // Date of the last purchase
-  final List<String> complementaryProductIds; // List of product IDs that complement this product
-  final bool isSeasonal; // Indicates if the product is seasonal
-  final DateTime? seasonStart; // Optional: start of the season for seasonal products
-  final DateTime? seasonEnd;   // Optional: end of the season for seasonal products
+  final String category;
+  final String variety;
+  final String pictureUrl;
+  final DateTime? lastPurchaseDate;
+  final List<String> complementaryProductIds;
+  final bool isSeasonal;
+  final DateTime? seasonStart;
+  final DateTime? seasonEnd;
+
+  int purchaseCount;
+  int recentPurchaseCount;
+  int reviewCount;
+
+  late String image; // Tracks the number of reviews for the product
 
   Product({
     required this.id,
@@ -20,41 +28,49 @@ class Product {
     required this.category,
     required this.variety,
     required this.pictureUrl,
-    this.lastPurchaseDate,  // Optional field for last purchase date
-    this.complementaryProductIds = const [], // Default to empty list
-    this.isSeasonal = false,  // Default to non-seasonal
-    this.seasonStart, // Optional field for season start date
-    this.seasonEnd,   // Optional field for season end date
+    this.lastPurchaseDate,
+    this.complementaryProductIds = const [],
+    this.isSeasonal = false,
+    this.seasonStart,
+    this.seasonEnd,
+    this.purchaseCount = 0,
+    this.recentPurchaseCount = 0,
+    this.reviewCount = 0, // Initialize review count
   });
 
-  // Factory constructor to create a Product instance from JSON data
-  factory Product.fromJson(Map<String, dynamic> json) {
+  // Factory constructor to create a Product instance from Firestore data
+  factory Product.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
     return Product(
-      id: json['_id'],
-      name: json['name'],
-      price: json['price'].toDouble(),
-      description: json['description'],
-      category: json['category'],
-      variety: json['variety'],
-      pictureUrl: json['pictureUrl'],
-      lastPurchaseDate: json['lastPurchaseDate'] != null 
-          ? DateTime.parse(json['lastPurchaseDate']) 
+      id: doc.id,
+      name: data['name'],
+      price: data['price'].toDouble(),
+      description: data['description'],
+      category: data['category'],
+      variety: data['variety'],
+      pictureUrl: data['pictureUrl'],
+      lastPurchaseDate: data['lastPurchaseDate'] != null
+          ? (data['lastPurchaseDate'] as Timestamp).toDate()
           : null,
-      complementaryProductIds: List<String>.from(json['complementaryProductIds'] ?? []),
-      isSeasonal: json['isSeasonal'] ?? false,
-      seasonStart: json['seasonStart'] != null 
-          ? DateTime.parse(json['seasonStart']) 
+      complementaryProductIds:
+          List<String>.from(data['complementaryProductIds'] ?? []),
+      isSeasonal: data['isSeasonal'] ?? false,
+      seasonStart: data['seasonStart'] != null
+          ? (data['seasonStart'] as Timestamp).toDate()
           : null,
-      seasonEnd: json['seasonEnd'] != null 
-          ? DateTime.parse(json['seasonEnd']) 
+      seasonEnd: data['seasonEnd'] != null
+          ? (data['seasonEnd'] as Timestamp).toDate()
           : null,
+      purchaseCount: data['purchaseCount'] ?? 0,
+      recentPurchaseCount: data['recentPurchaseCount'] ?? 0,
+      reviewCount:
+          data['reviewCount'] ?? 0, // Parse review count from Firestore
     );
   }
 
-  // Method to convert Product instance to JSON
-  Map<String, dynamic> toJson() {
+  // Convert Product instance to a map for Firestore storage
+  Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'name': name,
       'price': price,
       'description': description,
@@ -66,18 +82,22 @@ class Product {
       'isSeasonal': isSeasonal,
       'seasonStart': seasonStart?.toIso8601String(),
       'seasonEnd': seasonEnd?.toIso8601String(),
+      'purchaseCount': purchaseCount,
+      'recentPurchaseCount': recentPurchaseCount,
+      'reviewCount': reviewCount, // Include review count in Firestore map
     };
   }
 
-  // Method to check if this product is complementary to another product
-  bool isComplementaryTo(Product other) {
-    return complementaryProductIds.contains(other.id);
+  // Method to check if the product is in season
+  bool isInSeason() {
+    if (!isSeasonal) return true;
+    final now = DateTime.now();
+    return (seasonStart?.isBefore(now) ?? false) &&
+        (seasonEnd?.isAfter(now) ?? false);
   }
 
-  // Method to check if the product is currently in season
-  bool isInSeason() {
-    if (!isSeasonal || seasonStart == null || seasonEnd == null) return false;
-    DateTime now = DateTime.now();
-    return now.isAfter(seasonStart!) && now.isBefore(seasonEnd!);
+  // Method to check if this product is complementary to another product
+  bool isComplementaryTo(Product p) {
+    return complementaryProductIds.contains(p.id);
   }
 }
