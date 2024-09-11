@@ -397,7 +397,7 @@ class HomeScreenState extends State<HomeScreen> {
                       children: [
                         ListTile(
                           leading: const Icon(Icons.add_box),
-                          title: const Text('Add Product'),
+                          title: const Text('Add Products'),
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (_) => const AdminAddProductScreen()));
@@ -405,7 +405,7 @@ class HomeScreenState extends State<HomeScreen> {
                         ),
                         ListTile(
                           leading: const Icon(Icons.local_offer),
-                          title: const Text('Offers'),
+                          title: const Text('Create Offers'),
                           onTap: () {
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (_) => const AdminOffersScreen()));

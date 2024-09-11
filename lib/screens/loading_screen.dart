@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:grocerry/models/offer.dart';
-import '../providers/offer_provider.dart';
+import 'package:grocerry/providers/offer_provider.dart';
 import 'package:provider/provider.dart';
+import '../services/loading_screen_service.dart';
+import 'dart:io';
 
 class LoadingScreen extends StatefulWidget {
   const LoadingScreen({super.key});
@@ -14,12 +16,30 @@ class LoadingScreen extends StatefulWidget {
 class LoadingScreenState extends State<LoadingScreen> {
   List<Offer> topOffers = [];
   bool isLoading = true;
-  String errorMessage = '';
+  File? gifFile; // To hold the GIF file generated from LoadingScreenService
 
   @override
   void initState() {
     super.initState();
-    _loadTopOffers();
+    // Start LoadingScreenService and wait for the GIF to be generated
+    _startLoadingScreenService();
+  }
+
+  Future<void> _startLoadingScreenService() async {
+    // Call the LoadingScreenService and handle the generated GIF
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoadingScreenService(
+          onComplete: (File? generatedGif) {
+            setState(() {
+              gifFile = generatedGif; // Store the generated GIF file
+            });
+            _loadTopOffers(); // Start loading offers once GIF is ready
+          },
+        ),
+      ),
+    );
   }
 
   Future<void> _loadTopOffers() async {
@@ -34,6 +54,7 @@ class LoadingScreenState extends State<LoadingScreen> {
           isLoading = false;
         });
 
+        // Navigate to home screen after 3 seconds, regardless of whether offers or GIF exist
         Future.delayed(const Duration(seconds: 3), () {
           if (mounted) {
             Navigator.pushReplacementNamed(context, '/home');
@@ -41,10 +62,15 @@ class LoadingScreenState extends State<LoadingScreen> {
         });
       }
     } catch (error) {
+      // In case of any errors, still navigate to home screen after 3 seconds
       if (mounted) {
         setState(() {
-          errorMessage = 'Failed to load offers';
           isLoading = false;
+        });
+        Future.delayed(const Duration(seconds: 3), () {
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
         });
       }
     }
@@ -55,30 +81,20 @@ class LoadingScreenState extends State<LoadingScreen> {
     return Scaffold(
       body: Center(
         child: isLoading
-            ? const CircularProgressIndicator()
-            : errorMessage.isNotEmpty
-                ? Text(
-                    errorMessage,
-                    style: const TextStyle(color: Colors.red, fontSize: 18),
-                  )
-                : topOffers.isEmpty
+            ? const CircularProgressIndicator() // Show loading indicator when fetching data
+            : topOffers.isEmpty && gifFile == null
+                ? const CircularProgressIndicator() // No offers and no GIF, only show the loading spinner
+                : topOffers.isEmpty && gifFile != null
                     ? Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          // Logo Animation here
-                          Image.asset(
-                            'assets/logo_animation.gif', // Replace with your logo animation asset path
+                          // If no offers but GIF exists, show GIF
+                          Image.file(
+                            gifFile!,
                             width: 150,
                             height: 150,
                           ),
                           const SizedBox(height: 20),
-                          const Text(
-                            'No offers available',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                         ],
                       )
                     : ListView.builder(

@@ -1,19 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart'; // Ensure this import is present
-import 'package:grocerry/providers/profile_provider.dart';
+import 'package:grocerry/providers/user_provider.dart';
 import '../services/rider_location_service.dart';
 
 class TrackingScreen extends StatefulWidget {
   final String orderId;
-  final ProfileProvider profileProvider;
   final RiderLocationService riderLocationService;
 
   const TrackingScreen({
     super.key,
     required this.orderId,
-    required this.profileProvider,
     required this.riderLocationService,
+    required UserProvider userProvider,
   });
 
   @override

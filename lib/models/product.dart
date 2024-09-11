@@ -9,6 +9,7 @@ class Product {
   final String variety;
   final String pictureUrl;
   final DateTime? lastPurchaseDate;
+  final bool iscomplementary;
   final List<String> complementaryProductIds;
   final bool isSeasonal;
   final DateTime? seasonStart;
@@ -17,8 +18,6 @@ class Product {
   int purchaseCount;
   int recentPurchaseCount;
   int reviewCount;
-
-  late String image; // Tracks the number of reviews for the product
 
   Product({
     required this.id,
@@ -29,22 +28,29 @@ class Product {
     required this.variety,
     required this.pictureUrl,
     this.lastPurchaseDate,
+    this.iscomplementary = false,
     this.complementaryProductIds = const [],
     this.isSeasonal = false,
     this.seasonStart,
     this.seasonEnd,
     this.purchaseCount = 0,
     this.recentPurchaseCount = 0,
-    this.reviewCount = 0, // Initialize review count
+    this.reviewCount = 0,
   });
 
   // Factory constructor to create a Product instance from Firestore data
   factory Product.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+
+    // Safely parsing price in case it is not a double
+    final price = data['price'] is int
+        ? (data['price'] as int).toDouble()
+        : data['price'];
+
     return Product(
       id: doc.id,
       name: data['name'],
-      price: data['price'].toDouble(),
+      price: price,
       description: data['description'],
       category: data['category'],
       variety: data['variety'],
@@ -99,5 +105,29 @@ class Product {
   // Method to check if this product is complementary to another product
   bool isComplementaryTo(Product p) {
     return complementaryProductIds.contains(p.id);
+  }
+
+  // Method to check if the product is trending
+  bool get isTrending {
+    // Example static threshold for trending products
+    const int trendingThreshold = 100; // Define your threshold value
+    return purchaseCount >= trendingThreshold;
+  }
+
+  get isComplementary => null;
+
+  static Product empty() {
+    return Product(
+      id: '',
+      name: '',
+      price: 0.0,
+      description: '',
+      category: '',
+      variety: '',
+      pictureUrl: '',
+      purchaseCount: 0,
+      recentPurchaseCount: 0,
+      reviewCount: 0,
+    );
   }
 }

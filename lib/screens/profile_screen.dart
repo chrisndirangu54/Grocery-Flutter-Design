@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:grocerry/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 
-import 'package:grocerry/screens/order_details_screen.dart';
-// ignore: unused_import
-import 'package:grocerry/screens/tracking_screen.dart';
+import '../providers/user_provider.dart';
+import '../providers/order_provider.dart';
+import '../screens/order_details_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final profileProvider = Provider.of<ProfileProvider>(context);
+    final profileProvider = Provider.of<UserProvider>(context);
+    final orderProvider = Provider.of<OrderProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -25,7 +25,7 @@ class ProfileScreen extends StatelessWidget {
             children: [
               _buildProfileHeader(context, profileProvider),
               const SizedBox(height: 20),
-              _buildOrdersSection(context, profileProvider),
+              _buildOrdersSection(context, orderProvider),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
@@ -40,40 +40,39 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileHeader(
-      BuildContext context, ProfileProvider profileProvider) {
+  Widget _buildProfileHeader(BuildContext context, UserProvider userProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Name: ${profileProvider.name}',
+          'Name: ${userProvider.name}',
           style: const TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 8),
         Text(
-          'Email: ${profileProvider.email}',
+          'Email: ${userProvider.email}',
           style: const TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 8),
         Text(
-          'Address: ${profileProvider.address}',
+          'Address: ${userProvider.address}',
           style: const TextStyle(fontSize: 18),
         ),
         const SizedBox(height: 8),
-        if (profileProvider.lastLoginDate != null)
+        if (userProvider.lastLoginDate != null)
           Text(
-            'Last Login: ${profileProvider.lastLoginDate}',
+            'Last Login: ${userProvider.lastLoginDate}',
             style: const TextStyle(fontSize: 18),
           ),
         const SizedBox(height: 8),
-        if (profileProvider.profilePictureUrl.isNotEmpty)
-          Image.network(profileProvider.profilePictureUrl),
+        if (userProvider.profilePictureUrl.isNotEmpty)
+          Image.network(userProvider.profilePictureUrl),
       ],
     );
   }
 
   Widget _buildOrdersSection(
-      BuildContext context, ProfileProvider profileProvider) {
+      BuildContext context, OrderProvider orderProvider) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -85,25 +84,18 @@ class ProfileScreen extends StatelessWidget {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: profileProvider.orders.length,
+          itemCount: orderProvider.pendingOrders.length,
           itemBuilder: (context, index) {
-            final order = profileProvider.orders[index];
+            final order = orderProvider.pendingOrders[index];
             return ListTile(
-              title: Text(order.productName),
-              subtitle: Text('Price: \$${order.price.toStringAsFixed(2)}'),
-              trailing: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('Status: ${order.status}'),
-                  if (order.status == 'On the way')
-                    Text('Rider Location: ${order.riderLocation}'),
-                ],
-              ),
+              title: Text(order.description),
+              subtitle:
+                  Text('Price: \$${order.totalAmount.toStringAsFixed(2)}'),
+              trailing: Text('Status: ${order.status}'),
               onTap: () {
                 Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => OrderDetailsScreen(
-                    orderId: order.orderId,
-                    profileProvider: profileProvider,
+                    orderId: order.id,
                   ),
                 ));
               },
@@ -115,9 +107,9 @@ class ProfileScreen extends StatelessWidget {
   }
 
   void _showUpdateProfileDialog(
-      BuildContext context, ProfileProvider profileProvider) {
-    final nameController = TextEditingController(text: profileProvider.name);
-    final emailController = TextEditingController(text: profileProvider.email);
+      BuildContext context, UserProvider userProvider) {
+    final nameController = TextEditingController(text: userProvider.name);
+    final emailController = TextEditingController(text: userProvider.email);
 
     showDialog(
       context: context,
@@ -147,7 +139,7 @@ class ProfileScreen extends StatelessWidget {
             TextButton(
               child: const Text('Update'),
               onPressed: () {
-                profileProvider.updateProfile(
+                userProvider.updateProfile(
                   name: nameController.text,
                   email: emailController.text,
                 );

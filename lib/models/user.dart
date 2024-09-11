@@ -11,7 +11,7 @@ class User {
   final DateTime? lastLoginDate;
 
   bool canUserManageProducts() {
-    return isAdmin || isAttendant && canManageProducts;
+    return isAdmin || (isAttendant && canManageProducts);
   }
 
   // Admin-specific fields
@@ -58,11 +58,11 @@ class User {
   // Factory constructor to create a User instance from JSON data
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      email: json['email'],
-      token: json['token'],
-      name: json['name'],
-      address: json['address'],
-      profilePictureUrl: json['profilePictureUrl'],
+      email: json['email'] ?? '',
+      token: json['token'] ?? '',
+      name: json['name'] ?? '',
+      address: json['address'] ?? '',
+      profilePictureUrl: json['profilePictureUrl'] ?? '',
       favoriteProductIds: List<String>.from(json['favoriteProductIds'] ?? []),
       recentlyBoughtProductIds:
           List<String>.from(json['recentlyBoughtProductIds'] ?? []),

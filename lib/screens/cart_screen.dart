@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:grocerry/models/product.dart';
 import 'package:grocerry/providers/order_provider.dart';
+import 'package:grocerry/providers/product_provider.dart';
 import 'package:grocerry/screens/pending_deliveries_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -101,6 +103,17 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void _showSuccessDialog(String message) {
+    final cart = Provider.of<CartProvider>(context, listen: false);
+    final productProvider =
+        Provider.of<ProductProvider>(context, listen: false);
+
+    // Collect product details using the product IDs
+    final List<Product> orderedProducts = cart.items.values
+        .map((item) => productProvider.getProductById(item.product.id))
+        .where((product) => product != null)
+        .cast<Product>()
+        .toList();
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -109,12 +122,15 @@ class _CartScreenState extends State<CartScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              // Assuming we add the order to pending deliveries after checkout
+              // Prepare the order details
               Provider.of<OrderProvider>(context, listen: false).addOrder(
                 Order(
                   id: '126', // Generate a real order ID
                   description: 'New Order - Your Cart Description',
                   status: 'Pending',
+                  totalAmount: cart.totalAmount,
+                  productIds: orderedProducts.map((p) => p.id).toList(),
+                  date: '', // Pass product IDs
                 ),
               );
 

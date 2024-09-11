@@ -24,10 +24,10 @@ class ReviewScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           } else if (snapshot.hasError) {
             return const Center(child: Text('Error loading reviews'));
-          } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          } else if (!snapshot.hasData || snapshot.data?.docs.isEmpty == true) {
             return const Center(child: Text('No reviews found'));
           } else {
-            final reviews = snapshot.data!.docs;
+            final reviews = snapshot.data?.docs ?? [];
 
             return ListView.builder(
               itemCount: reviews.length,
@@ -44,7 +44,9 @@ class ReviewScreen extends StatelessWidget {
                   leading: CircleAvatar(
                     backgroundColor: Colors.teal.shade300,
                     child: Text(
-                      reviewerName[0].toUpperCase(),
+                      reviewerName.isNotEmpty
+                          ? reviewerName[0].toUpperCase()
+                          : '?', // Handle case where reviewerName might be empty
                       style: const TextStyle(color: Colors.white),
                     ),
                   ),

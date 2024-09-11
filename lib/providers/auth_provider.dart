@@ -15,7 +15,13 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider() {
     // Initialize the user state on startup
+    _initializeUser();
+  }
+
+  // Initialize user state
+  void _initializeUser() {
     _user = _auth.currentUser;
+    notifyListeners();
   }
 
   // Login using Firebase Authentication
@@ -43,15 +49,19 @@ class AuthProvider with ChangeNotifier {
       );
       _user = userCredential.user;
 
-      // Store additional user data in Firestore
-      await _firestore.collection('users').doc(_user!.uid).set({
-        'email': email,
-        'contact': contact,
-        'isAdmin': isAdmin,
-        'createdAt': Timestamp.now(),
-      });
+      if (_user != null) {
+        // Store additional user data in Firestore
+        await _firestore.collection('users').doc(_user!.uid).set({
+          'email': email,
+          'contact': contact,
+          'isAdmin': isAdmin,
+          'createdAt': Timestamp.now(),
+        });
 
-      notifyListeners();
+        notifyListeners();
+      } else {
+        throw Exception('User creation failed.');
+      }
     } catch (e) {
       _handleAuthError(e);
     }
@@ -93,6 +103,8 @@ class AuthProvider with ChangeNotifier {
       errorMessage = 'An error occurred. Please try again later.';
     }
 
+    // Optionally notify listeners about the error
+    notifyListeners();
     throw Exception(errorMessage);
   }
 }

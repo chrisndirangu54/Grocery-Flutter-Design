@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../providers/profile_provider.dart';
-import '../screens/rider_screen.dart';
-import '../screens/add_review_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/order_provider.dart';
+import '../services/rider_location_service.dart'; // Add this import
+import '../providers/user_provider.dart'; // Add this import
+import '../screens/tracking_screen.dart'; // Add this import
 
 class OrderDetailsScreen extends StatefulWidget {
   final String orderId;
-  final ProfileProvider profileProvider;
 
   const OrderDetailsScreen({
     super.key,
     required this.orderId,
-    required this.profileProvider,
   });
 
   @override
@@ -23,8 +23,15 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    final order = widget.profileProvider.orders.firstWhere(
-      (o) => o.orderId == widget.orderId,
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _handleOrderStatus();
+    });
+  }
+
+  void _handleOrderStatus() {
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    final order = orderProvider.pendingOrders.firstWhere(
+      (o) => o.id == widget.orderId,
       orElse: () => throw Exception('Order not found'),
     );
 
@@ -33,23 +40,24 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
       Future.delayed(const Duration(hours: 24), () {
         if (!deliveryConfirmed) {
           setState(() {
-            widget.profileProvider
-                .updateOrderStatus(order.orderId, 'Delivered');
+            orderProvider.updateOrderStatus(order.id, 'Delivered');
           });
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Delivery Status'),
-              content: const Text(
-                  'The order has been automatically marked as delivered.'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
+          if (mounted) {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text('Delivery Status'),
+                content: const Text(
+                    'The order has been automatically marked as delivered.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          }
         }
       });
     }
@@ -57,8 +65,12 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final order = widget.profileProvider.orders.firstWhere(
-      (o) => o.orderId == widget.orderId,
+    final orderProvider = Provider.of<OrderProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context); // Get UserProvider
+    final riderLocationService = RiderLocationService(); // Create instance
+
+    final order = orderProvider.pendingOrders.firstWhere(
+      (o) => o.id == widget.orderId,
       orElse: () => throw Exception('Order not found'),
     );
 
@@ -74,33 +86,8 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
             const Text('Order Items:',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            ...order.items.map((item) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Product Name: ${item.productName}',
-                          style: const TextStyle(fontSize: 18)),
-                      const SizedBox(height: 4),
-                      Text('Price: \$${item.price.toStringAsFixed(2)}',
-                          style: const TextStyle(fontSize: 18)),
-                      const SizedBox(height: 4),
-                      ElevatedButton(
-                        onPressed: item.isReviewed
-                            ? null
-                            : () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => AddReviewScreen(
-                                    productId: item.productId,
-                                  ),
-                                ));
-                              },
-                        child:
-                            Text(item.isReviewed ? 'Reviewed' : 'Add Review'),
-                      ),
-                    ],
-                  ),
-                )),
+            Text('Description: ${order.description}',
+                style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 16),
             const Text('Order Details:',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
@@ -111,37 +98,29 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
             if (order.status == 'On the way') ...[
               Text('Rider Location: ${order.riderLocation}',
                   style: const TextStyle(fontSize: 18)),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
+                  // Navigate to TrackingScreen with necessary parameters
                   Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) => RiderScreen(
-                      orderId: order.orderId,
-                      profileProvider: widget.profileProvider,
+                    builder: (context) => TrackingScreen(
+                      orderId: order.id,
+                      userProvider: userProvider,
+                      riderLocationService: riderLocationService,
                     ),
                   ));
                 },
                 child: const Text('Track Rider'),
               ),
             ],
-            const SizedBox(height: 8),
-            Text(
-                'Estimated Delivery Time: ${order.estimatedDeliveryTime ?? '30-40 minutes'}',
-                style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            Text('Rider Contact: ${order.riderContact ?? '+1234567890'}',
-                style: const TextStyle(fontSize: 18)),
             const SizedBox(height: 16),
-
-            // Show buttons when the rider has arrived
             if (order.status == 'Rider has arrived') ...[
               ElevatedButton(
                 onPressed: () {
                   setState(() {
                     deliveryConfirmed = true;
                   });
-                  widget.profileProvider
-                      .updateOrderStatus(order.orderId, 'Delivered');
+                  orderProvider.updateOrderStatus(order.id, 'Delivered');
                 },
                 child: const Text('Confirm Delivery'),
               ),
@@ -151,8 +130,7 @@ class OrderDetailsScreenState extends State<OrderDetailsScreen> {
                   setState(() {
                     deliveryConfirmed = true;
                   });
-                  widget.profileProvider
-                      .updateOrderStatus(order.orderId, 'Not Delivered');
+                  orderProvider.updateOrderStatus(order.id, 'Not Delivered');
                 },
                 child: const Text('Was Not Delivered'),
               ),

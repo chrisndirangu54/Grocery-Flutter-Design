@@ -4,16 +4,41 @@ import 'package:grocerry/models/product.dart';
 import 'package:grocerry/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:grocerry/providers/product_provider.dart';
+import 'package:grocerry/providers/user_provider.dart'; // For adding/removing favorites
+import 'package:grocerry/providers/cart_provider.dart'; // For cart functionality
 import 'review_screen.dart'; // Import the review screen
 
 class ProductScreen extends StatelessWidget {
   final String productId;
+
   const ProductScreen({super.key, required this.productId});
 
   @override
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
+    final userProvider = Provider.of<UserProvider>(context);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
     final product = productProvider.getProductById(productId);
+
+    // Define the threshold for "Highly Rated"
+    const int highlyRatedThreshold = 100;
+
+    // Create a dynamic list of icons, toggling "Highly Rated" based on review count
+    List<IconDetail> dynamicIconsList = [
+      IconDetail(
+          image: 'assets/icons/LikeOutline.svg', head: 'Quality\nAssurance'),
+      IconDetail(
+          image: 'assets/icons/SpoonOutline.svg', head: 'Best In\nTaste'),
+    ];
+
+    // Add "Highly Rated" icon if the review count exceeds the threshold
+    if (product != null && product.reviewCount > highlyRatedThreshold) {
+      dynamicIconsList.add(
+        IconDetail(
+            image: 'assets/icons/StartOutline.svg', head: 'Highly\nRated'),
+      );
+    }
 
     return Scaffold(
       backgroundColor: primaryColor,
@@ -25,16 +50,22 @@ class ProductScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 40),
-            child: CircleAvatar(
-              radius: 25,
-              backgroundColor: const Color.fromARGB(255, 90, 90, 90),
-              child: SvgPicture.asset(
-                'assets/icons/cartIcon.svg',
-                colorFilter:
-                    const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.pushNamed(
+                    context, '/cart'); // Navigate to Cart screen
+              },
+              child: CircleAvatar(
+                radius: 25,
+                backgroundColor: const Color.fromARGB(255, 90, 90, 90),
+                child: SvgPicture.asset(
+                  'assets/icons/cartIcon.svg',
+                  colorFilter:
+                      const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+                ),
               ),
             ),
-          )
+          ),
         ],
       ),
       body: SafeArea(
@@ -61,7 +92,6 @@ class ProductScreen extends StatelessWidget {
                       "⭐ (${product.reviewCount} reviews)",
                       style: const TextStyle(fontSize: 15, color: Colors.grey),
                     ),
-                    // Add the "View Reviews" button
                     const SizedBox(height: 5),
                     ElevatedButton(
                       onPressed: () {
@@ -102,7 +132,7 @@ class ProductScreen extends StatelessWidget {
                                 child: Transform.scale(
                                   scale: 2.6,
                                   child: Image.asset(
-                                    product.image,
+                                    product.pictureUrl,
                                     height: 100,
                                     width: 100,
                                   ),
@@ -131,103 +161,129 @@ class ProductScreen extends StatelessWidget {
                                             color: Color.fromARGB(
                                                 255, 174, 173, 173),
                                             letterSpacing: 5),
-                                      )
+                                      ),
                                     ],
                                   ),
-                                  CircleAvatar(
-                                    backgroundColor: iconBackgroundColor,
-                                    radius: 30,
-                                    child: SvgPicture.asset(
-                                      'assets/icons/heartIcon.svg',
-                                      height: 24,
-                                      width: 24,
-                                      colorFilter: const ColorFilter.mode(
-                                          Colors.red, BlendMode.srcIn),
+                                  GestureDetector(
+                                    onTap: () {
+                                      if (userProvider.user.favoriteProductIds
+                                          .contains(product.id)) {
+                                        userProvider
+                                            .removeFavoriteProduct(product.id);
+                                      } else {
+                                        userProvider
+                                            .addFavoriteProduct(product.id);
+                                      }
+                                    },
+                                    child: CircleAvatar(
+                                      backgroundColor: iconBackgroundColor,
+                                      radius: 30,
+                                      child: SvgPicture.asset(
+                                        'assets/icons/heartIcon.svg',
+                                        height: 24,
+                                        width: 24,
+                                        colorFilter: ColorFilter.mode(
+                                          userProvider.user.favoriteProductIds
+                                                  .contains(product.id)
+                                              ? Colors
+                                                  .red // Show red heart if it's a favorite
+                                              : Colors
+                                                  .grey, // Show grey heart otherwise
+                                          BlendMode.srcIn,
+                                        ),
+                                      ),
                                     ),
                                   )
                                 ],
                               ),
                               const SizedBox(height: 40),
+                              // Display dynamicIconList based on product review count
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
-                                children: product.iconsList
-                                    .map((iconDetail) => Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 35,
-                                              backgroundColor:
-                                                  iconBackgroundColor,
-                                              child: SvgPicture.asset(
-                                                iconDetail.image,
-                                                colorFilter:
-                                                    const ColorFilter.mode(
-                                                        Colors.grey,
-                                                        BlendMode.srcIn),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Text(
-                                              iconDetail.head,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color.fromARGB(
-                                                      255, 157, 157, 157)),
-                                            )
-                                          ],
-                                        ))
-                                    .toList(),
+                                children: dynamicIconsList.map((iconDetail) {
+                                  return Column(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 35,
+                                        backgroundColor: Colors.grey[300],
+                                        child: SvgPicture.asset(
+                                          iconDetail.image,
+                                          height: 24,
+                                          width: 24,
+                                          colorFilter: const ColorFilter.mode(
+                                            Colors.grey,
+                                            BlendMode.srcIn,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        iconDetail.head,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
                               ),
                               const SizedBox(height: 60),
                               Row(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  firstGestureDetector(),
+                                  _buildQuantityManager(
+                                      context, cartProvider, product),
                                   GestureDetector(
-                                      onTap: () {},
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 10, horizontal: 20),
-                                        height: 45,
-                                        decoration: BoxDecoration(
-                                            color: mainColor,
-                                            borderRadius:
-                                                const BorderRadius.all(
-                                                    Radius.circular(13))),
-                                        child: Row(
-                                          children: [
-                                            const Text(
-                                              'Go To Cart',
-                                              style: TextStyle(
-                                                color: Color.fromARGB(
-                                                    255, 6, 2, 67),
-                                              ),
+                                    onTap: () {
+                                      cartProvider.addItem(
+                                        product,
+                                        product.name,
+                                        product.price,
+                                      );
+                                      Navigator.pushNamed(
+                                          context, '/cart'); // Navigate to Cart
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 10, horizontal: 20),
+                                      height: 45,
+                                      decoration: BoxDecoration(
+                                          color: mainColor,
+                                          borderRadius: const BorderRadius.all(
+                                              Radius.circular(13))),
+                                      child: Row(
+                                        children: [
+                                          const Text(
+                                            'Go To Cart',
+                                            style: TextStyle(
+                                              color:
+                                                  Color.fromARGB(255, 6, 2, 67),
                                             ),
-                                            const SizedBox(width: 20),
-                                            SvgPicture.asset(
-                                              'assets/icons/arrowRight.svg',
-                                              width: 20,
-                                              height: 20,
-                                              colorFilter:
-                                                  const ColorFilter.mode(
-                                                      Color.fromARGB(
-                                                          255, 6, 2, 67),
-                                                      BlendMode.srcIn),
-                                            ),
-                                          ],
-                                        ),
-                                      ))
+                                          ),
+                                          const SizedBox(width: 20),
+                                          SvgPicture.asset(
+                                            'assets/icons/arrowRight.svg',
+                                            width: 20,
+                                            height: 20,
+                                            colorFilter: const ColorFilter.mode(
+                                                Color.fromARGB(255, 6, 2, 67),
+                                                BlendMode.srcIn),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ],
-                              )
+                              ),
                             ],
                           ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
         ),
@@ -235,47 +291,45 @@ class ProductScreen extends StatelessWidget {
     );
   }
 
-  GestureDetector firstGestureDetector() {
-    return GestureDetector(
-      onTap: () {},
-      child: Container(
-        decoration: BoxDecoration(
-            color: iconBackgroundColor,
-            borderRadius: const BorderRadius.all(Radius.circular(13))),
-        child: Row(
-          children: [
-            IconButton(
-              onPressed: () {},
-              icon: SvgPicture.asset(
-                'assets/icons/minus-solid.svg',
-                width: 14,
-                height: 14,
-                colorFilter: const ColorFilter.mode(
-                    Color.fromARGB(255, 157, 157, 157), BlendMode.srcIn),
-              ),
-            ),
-            const Text(
-              "0",
-              style: TextStyle(color: Colors.white, fontSize: 20),
-            ),
-            IconButton(
-              iconSize: 14,
-              onPressed: () {},
-              icon: SvgPicture.asset(
-                'assets/icons/plus-solid.svg',
-                width: 14,
-                height: 14,
-                colorFilter: const ColorFilter.mode(
-                    Color.fromARGB(255, 157, 157, 157), BlendMode.srcIn),
-              ),
-            ),
-          ],
+  // Widget to manage quantity in cart
+  Widget _buildQuantityManager(
+      BuildContext context, CartProvider cartProvider, Product product) {
+    return Row(
+      children: [
+        IconButton(
+          icon: SvgPicture.asset(
+            'assets/icons/minus-solid.svg',
+            width: 14,
+            height: 14,
+            colorFilter: const ColorFilter.mode(
+                Color.fromARGB(255, 157, 157, 157), BlendMode.srcIn),
+          ),
+          onPressed: () {
+            cartProvider.removeItem(product.id);
+          },
         ),
-      ),
+        Selector<CartProvider, int>(
+          selector: (context, cart) => cart.items[product.id]?.quantity ?? 0,
+          builder: (context, quantity, _) {
+            return Text(
+              quantity.toString(),
+              style: const TextStyle(color: Colors.white, fontSize: 20),
+            );
+          },
+        ),
+        IconButton(
+          icon: SvgPicture.asset(
+            'assets/icons/plus-solid.svg',
+            width: 14,
+            height: 14,
+            colorFilter: const ColorFilter.mode(
+                Color.fromARGB(255, 157, 157, 157), BlendMode.srcIn),
+          ),
+          onPressed: () {
+            cartProvider.addItem(product, product.name, product.price);
+          },
+        ),
+      ],
     );
   }
-}
-
-extension on Product {
-  get iconsList => null;
 }

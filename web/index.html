@@ -4,7 +4,6 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="A new Flutter project.">
 
   <!-- iOS meta tags & icons -->
@@ -29,11 +28,10 @@
       scriptLoaded = true;
 
       const scriptTag = document.createElement('script');
-      scriptTag.src = 'main.dart.js';
+      scriptTag.src = 'main.dart.js?v=' + new Date().getTime();
       scriptTag.type = 'application/javascript';
       document.body.appendChild(scriptTag);
 
-      // Handle potential loading errors
       scriptTag.onerror = function() {
         console.error('Failed to load main.dart.js');
       };
@@ -41,9 +39,7 @@
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        // Cache-busting by appending a timestamp
         const serviceWorkerUrl = 'flutter_service_worker.js?v=' + new Date().getTime();
-
         console.log(`Attempting to register service worker from: ${serviceWorkerUrl}`);
 
         navigator.serviceWorker.register(serviceWorkerUrl)
@@ -78,16 +74,14 @@
             loadMainDartJs();
           });
 
-        // Fallback if service worker fails to load
         setTimeout(() => {
           if (!scriptLoaded) {
             console.warn('Failed to load app from service worker. Falling back to plain <script> tag.');
             loadMainDartJs();
           }
-        }, 4000);
+        }, 10000); // Increased timeout from 4000ms to 10000ms
       });
     } else {
-      // Service worker not supported
       loadMainDartJs();
     }
   </script>

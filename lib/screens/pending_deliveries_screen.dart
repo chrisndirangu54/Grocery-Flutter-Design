@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/order_provider.dart';
-import '../providers/profile_provider.dart';
+import '../providers/user_provider.dart';
 import '../screens/order_details_screen.dart';
 
 class PendingDeliveriesScreen extends StatelessWidget {
@@ -10,9 +10,9 @@ class PendingDeliveriesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderProvider = Provider.of<OrderProvider>(context);
-    final profileProvider = Provider.of<ProfileProvider>(context);
+    final profileProvider = Provider.of<UserProvider>(context);
     final user =
-        profileProvider.currentUser; // Assume currentUser is of type User
+        profileProvider.user; // Use the correct provider to get the user
 
     return Scaffold(
       appBar: AppBar(
@@ -140,7 +140,6 @@ class PendingDeliveriesScreen extends StatelessWidget {
                     Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => OrderDetailsScreen(
                         orderId: order.id,
-                        profileProvider: profileProvider,
                       ),
                     ));
                   },

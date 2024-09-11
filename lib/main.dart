@@ -13,17 +13,26 @@ import './providers/auth_provider.dart';
 import './providers/product_provider.dart';
 import './providers/cart_provider.dart';
 import './providers/offer_provider.dart';
-import './providers/profile_provider.dart';
+import './providers/user_provider.dart';
 import './providers/order_provider.dart'; // Added OrderProvider
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  // Handle Firebase initialization with error handling
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    print("Error initializing Firebase: $e");
+  }
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
+  get user => null;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +45,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) => OrderProvider()), // Added OrderProvider
         ChangeNotifierProvider(
-            create: (_) => ProfileProvider(name: '', email: '')),
+            create: (_) => UserProvider(name: '', email: '', user: user)),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

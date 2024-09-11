@@ -7,6 +7,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../models/offer.dart'; // For uploading the image
+import 'package:tuple/tuple.dart'; // Add tuple package for tuple support
 
 class OfferService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,7 +25,9 @@ class OfferService {
 
   Future<void> createOffers() async {
     final DateTime now = DateTime.now();
-    final bool isPublicHoliday = _checkIfPublicHoliday(now);
+    final Tuple2<bool, String?> holidayInfo = _checkIfPublicHoliday(now);
+    final bool isPublicHoliday = holidayInfo.item1;
+    final String? holidayName = holidayInfo.item2;
     final bool isWeekend =
         now.weekday == DateTime.saturday || now.weekday == DateTime.sunday;
 
@@ -70,7 +73,7 @@ class OfferService {
             .set(currentOffer.toMap());
       }
 
-      _notifyUsers(offerTitle);
+      _notifyUsers(offerTitle, holidayName);
     }
   }
 
@@ -118,27 +121,26 @@ class OfferService {
       image = img.drawString(
         image, // The image object
         font, // The BitmapFont loaded earlier
-        10, // X position (positional argument, not named)
-        10, // Y position (positional argument, not named)
+        10, // X position
+        10, // Y position
         '$discount% OFF', // Text to draw
-        color: img.getColor(
-            255, 0, 0), // Color for the text (optional named parameter)
+        color: img.getColor(255, 0, 0), // Color for the text
       );
 
       // Step 4: Add the product name text
       image = img.drawString(
         image, // The image object
         font, // The BitmapFont loaded earlier
-        10, // X position (positional argument, not named)
-        image.height - 30, // Y position (positional argument, not named)
+        10, // X position
+        image.height - 30, // Y position
         productName, // Text to draw
-        color: img.getColor(
-            255, 255, 255), // Color for the text (optional named parameter)
+        color: img.getColor(255, 255, 255), // Color for the text
       );
+
       // Step 5: Encode the image back to PNG
       Uint8List pngBytes = Uint8List.fromList(img.encodePng(image));
 
-      // Step 6: Upload the image to Firebase Storage (or any other storage)
+      // Step 6: Upload the image to Firebase Storage
       FirebaseStorage storage = FirebaseStorage.instance;
       String filePath = 'offers/${DateTime.now().millisecondsSinceEpoch}.png';
       Reference ref = storage.ref().child(filePath);
@@ -155,7 +157,7 @@ class OfferService {
     }
   }
 
-  Future<void> _notifyUsers(String offerTitle) async {
+  Future<void> _notifyUsers(String offerTitle, String? holidayName) async {
     final QuerySnapshot usersSnapshot =
         await _firestore.collection('users').get();
 
@@ -167,7 +169,8 @@ class OfferService {
       String userName = userData['name'];
 
       // Generate a personalized notification message
-      String notificationMessage = await _generateNotificationMessage(userName);
+      String notificationMessage =
+          await _generateNotificationMessage(userName, holidayName);
 
       // Send notification
       await _notificationsPlugin.show(
@@ -186,11 +189,12 @@ class OfferService {
     }
   }
 
-  Future<String> _generateNotificationMessage(String userName) async {
+  Future<String> _generateNotificationMessage(
+      String userName, String? holidayName) async {
     try {
-      // Define the prompt with the user's name for a personalized message
+      // Define the prompt with the user's name and holiday name for a personalized message
       String prompt =
-          "Generate a creative offer notification message for a user named $userName.";
+          "Generate a creative offer notification message for a user named $userName, mentioning the holiday '$holidayName'.";
 
       // Call ChatGPT API to generate the message
       final response = await http.post(
@@ -213,40 +217,61 @@ class OfferService {
         // Log the error and use a fallback message
         print(
             'Failed to generate message. Status code: ${response.statusCode}');
-        return _getFallbackMessage(userName);
+        return _getFallbackMessage(userName, holidayName);
       }
     } catch (e) {
       // Handle API errors and use fallback message
       print('Error generating message: $e');
-      return _getFallbackMessage(userName);
+      return _getFallbackMessage(userName, holidayName);
     }
   }
 
-  String _getFallbackMessage(String userName) {
+  String _getFallbackMessage(String userName, String? holidayName) {
     List<String> messages = [
-      "Hey $userName, don't miss out on our exclusive offer!",
-      "Special deal just for you, $userName!",
-      "Hurry, $userName, limited time offer available now!",
+      "Hey $userName, don't miss out on our exclusive offer for $holidayName!",
+      "Special $holidayName deal just for you, $userName!",
+      "Hurry, $userName, limited time $holidayName offer available now!",
     ];
     messages.shuffle();
     return messages.first;
   }
 
-  bool _checkIfPublicHoliday(DateTime date) {
-    List<DateTime> publicHolidays = [
-      DateTime(date.year, 1, 1), // New Year's Day
-      DateTime(date.year, 4,
-          1), // Good Friday (movable, usually first Friday of April)
-      DateTime(date.year, 4,
-          4), // Easter Monday (movable, usually the first Monday after Good Friday)
-      DateTime(date.year, 5, 1), // Labour Day
-      DateTime(date.year, 6, 1), // Madaraka Day
-      DateTime(date.year, 10, 20), // Mashujaa Day (Heroes' Day)
-      DateTime(date.year, 12, 12), // Jamhuri Day (Independence Day)
-      DateTime(date.year, 12, 25), // Christmas Day
-      DateTime(date.year, 12, 26), // Boxing Day
-    ];
+  Tuple2<bool, String?> _checkIfPublicHoliday(DateTime date) {
+    Map<DateTime, String> publicHolidays = {
+      DateTime(date.year, 1, 1): "New Year's Day",
+      DateTime(date.year, 5, 1): "Labour Day",
+      DateTime(date.year, 6, 1): "Madaraka Day",
+      DateTime(date.year, 10, 20): "Mashujaa Day",
+      DateTime(date.year, 12, 12): "Jamhuri Day",
+      DateTime(date.year, 12, 25): "Christmas Day",
+      DateTime(date.year, 12, 26): "Boxing Day",
+    };
 
-    return publicHolidays.contains(DateTime(date.year, date.month, date.day));
+    // Add Easter
+    DateTime easter = calculateEaster(date.year);
+    publicHolidays[easter] = "Easter";
+
+    String? holidayName =
+        publicHolidays[DateTime(date.year, date.month, date.day)];
+    return Tuple2(holidayName != null, holidayName);
+  }
+
+  DateTime calculateEaster(int year) {
+    int a = year % 19;
+    int b = year ~/ 100;
+    int c = year % 100;
+    int d = b ~/ 4;
+    int e = b % 4;
+    int f = (b + 8) ~/ 25;
+    int g = (b - f + 1) ~/ 3;
+    int h = (19 * a + b - d - g + 15) % 30;
+    int i = c ~/ 4;
+    int k = c % 4;
+    int l = (32 + 2 * e + 2 * i - h - k) % 7;
+    int m = (a + 11 * h + 22 * l) ~/ 451;
+    int month = (h + l - 7 * m + 114) ~/ 31;
+    int day = ((h + l - 7 * m + 114) % 31) + 1;
+
+    return DateTime(year, month, day);
   }
 }
